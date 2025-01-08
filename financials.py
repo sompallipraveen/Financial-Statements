@@ -31,14 +31,28 @@ from io import BytesIO
 from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 import traceback
+from dotenv import load_dotenv
 # Create Blueprint
 financials = Blueprint('financials', __name__, url_prefix='/financials')
 
 # MongoDB connection
+# Load environment variables
+load_dotenv()
+
 def get_db():
+    """Get MongoDB database connection"""
     try:
-        client = MongoClient("mongodb+srv://praveen:zBchSZP8PMa6SDP3@cluster0.3iylk.mongodb.net/IAapplication?retryWrites=true&w=majority")
+        # Get MongoDB URI from environment variable
+        mongo_uri = os.getenv('MONGO_URI')
+        if not mongo_uri:
+            raise ValueError("MongoDB URI not found in environment variables")
+            
+        # Create MongoDB client
+        client = MongoClient(mongo_uri)
+        
+        # Return database instance
         return client.IAapplication
+        
     except Exception as e:
         print(f"Database connection error: {str(e)}")
         raise
