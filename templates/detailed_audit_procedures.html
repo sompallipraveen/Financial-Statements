@@ -1,0 +1,32 @@
+<!-- templates/detailed_audit_procedures.html -->
+{% extends "client_page.html" %}
+
+{% block title %}Detailed Audit Procedures{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Detailed Audit Procedures for {{ scope.name }}</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Audit Step</th>
+                <th>Procedure</th>
+                <th>Audit Evidence Required</th>
+                <th>Comments</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for procedure in audit_procedures %}
+            <tr>
+                <td>{{ procedure.audit_step }}</td>
+                <td>{{ procedure.procedure }}</td>
+                <td>{{ procedure.audit_evidence }}</td>
+                <td>{{ procedure.comments }}</td>
+                <td>{{ procedure.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

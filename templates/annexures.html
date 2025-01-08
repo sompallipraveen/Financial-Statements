@@ -1,0 +1,1695 @@
+{% extends "client_page.html" %}
+
+{% block title %}Annexures Management{% endblock %}
+
+{% block content %}
+
+<style>
+    .btn-group .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        margin-right: 0.5rem;
+    }
+    .search-controls .form-control {
+        padding-right: 30px;
+    }
+
+    .search-controls .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+
+    .search-controls .clear-search {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d;
+    }
+
+    .search-controls .clear-search:hover {
+        color: #495057;
+    }
+
+    @media (max-width: 768px) {
+        .search-controls .col-md {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+<div class="container mt-4">
+    <h2 class="mb-4">Annexures Management for {{ client.company_name }}</h2>
+    
+    <!-- Period Information -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Audit Period: {{ start_date }} to {{ end_date }}</h5>
+        </div>
+    </div>
+
+    <!-- Create New Annexure Card -->
+<!-- Create New Annexure Card -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Create New Annexure</h5>
+        <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#newAnnexureForm">
+            <i class="fas fa-plus"></i> New Annexure
+        </button>
+    </div>
+    <div class="card-body collapse" id="newAnnexureForm">
+        <form action="{{ url_for('annexures', client_id=client._id, start_date=start_date, end_date=end_date) }}" method="POST" id="annexureForm">
+            <input type="hidden" name="start_date" value="{{ start_date }}">
+            <input type="hidden" name="end_date" value="{{ end_date }}">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Scope Area</label>
+                    <select class="form-select" name="scope_area" required>
+                        <option value="">Select Scope Area</option>
+                        {% for scope in audit_plan.modified_audit_scope %}
+                            <option value="{{ scope.name }}">{{ scope.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Audit Procedure</label>
+                    <select class="form-select" name="audit_procedure_id" id="auditProcedureSelect">
+                        <option value="">Select Procedure (Optional)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Annexure Name</label>
+                    <input type="text" class="form-control" name="annexure_name" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" name="description" required rows="2"></textarea>
+            </div>
+
+            <!-- Column Headers Configuration -->
+            <div class="mb-3">
+                <label class="form-label">Define Column Headers</label>
+                <div class="d-flex align-items-center mb-2">
+                    <input type="text" class="form-control me-2" id="columnHeader" placeholder="Enter column header">
+                    <button type="button" class="btn btn-secondary" id="addColumn">Add Column</button>
+                </div>
+                <div id="columnsList" class="mb-3">
+                    <!-- Predefined columns -->
+                    <div class="badge bg-primary me-2 mb-2">Sr. No. <i class="fas fa-times ms-1"></i></div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered" id="annexureTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Sr. No.</th>
+                            <th>Document Reference</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Remarks</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" class="form-control" name="table_data[]"></td>
+                            <td><input type="text" class="form-control" name="table_data[]"></td>
+                            <td><input type="number" class="form-control" name="table_data[]"></td>
+                            <td><input type="text" class="form-control" name="table_data[]"></td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-secondary btn-sm" id="addRow">
+                    <i class="fas fa-plus"></i> Add Row
+                </button>
+            </div>
+
+            <div class="text-end mt-3">
+                <button type="submit" class="btn btn-primary">Save Annexure</button>
+            </div>
+        </form>
+    </div>
+</div>
+</form>
+
+<!-- Import Annexure Card (Separate) -->
+<!-- Import Annexure Card -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Import Annexure</h5>
+        <div>
+            <a href="{{ url_for('download_annexure_template', client_id=client._id) }}" 
+               class="btn btn-light btn-sm me-2">
+                <i class="fas fa-download"></i> Download Template
+            </a>
+            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#importAnnexureForm">
+                <i class="fas fa-file-import"></i> Import
+            </button>
+        </div>
+    </div>
+    <div class="card-body collapse" id="importAnnexureForm">
+        <form id="importForm" enctype="multipart/form-data">
+            <!-- Hidden fields -->
+            <input type="hidden" name="start_date" value="{{ start_date }}">
+            <input type="hidden" name="end_date" value="{{ end_date }}">
+            
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">Scope Area <span class="text-danger">*</span></label>
+                    <select class="form-select" name="scope_area" required id="importScopeArea">
+                        <option value="">Select Scope Area</option>
+                        {% for scope in audit_plan.modified_audit_scope %}
+                            <option value="{{ scope.name }}">{{ scope.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Audit Procedure</label>
+                    <select class="form-select" name="audit_procedure" id="importAuditProcedure">
+                        <option value="">Select Procedure (Optional)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Annexure Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="annexure_name" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="description" required>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">Excel File <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="file" class="form-control" name="file" accept=".xlsx" required>
+                    <button type="submit" class="btn btn-primary" id="importSubmitBtn">
+                        <i class="fas fa-upload me-1"></i> Import
+                    </button>
+                </div>
+                <small class="text-muted">Please upload Excel file (.xlsx) in the specified template format</small>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add this CSS -->
+<style>
+.input-group .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-header .btn-light {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: transparent;
+}
+
+.card-header .btn-light:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.form-label span.text-danger {
+    font-weight: bold;
+}
+</style>
+                <!-- Column Headers Configuration -->
+ <!-- Search Filters -->
+<div class="card-body border-bottom">
+    <div class="row g-3 mb-3">
+        <div class="col-md">
+            <input type="text" class="form-control" id="searchScopeArea" placeholder="Search Scope Area">
+        </div>
+        <div class="col-md">
+            <input type="text" class="form-control" id="searchProcedure" placeholder="Search Procedure">
+        </div>
+        <div class="col-md">
+            <input type="text" class="form-control" id="searchAnnexureName" placeholder="Search Annexure Name">
+        </div>
+        <div class="col-md">
+            <input type="text" class="form-control" id="searchDescription" placeholder="Search Description">
+        </div>
+        <div class="col-md">
+            <input type="text" class="form-control" id="searchDate" placeholder="Search Date">
+        </div>
+        <div class="col-md-auto">
+            <button class="btn btn-secondary" id="clearSearch">
+                <i class="fas fa-times me-1"></i>Clear
+            </button>
+        </div>
+    </div>
+</div>   
+
+    <!-- Existing Annexures Table -->
+<!-- Replace your existing table structure with this one -->
+<div class="card shadow-sm">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Existing Annexures</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 20%">Scope Area</th>
+                        <th style="width: 15%">Audit Procedure</th>
+                        <th style="width: 15%">Annexure Name</th>
+                        <th style="width: 20%">Description</th>
+                        <th style="width: 15%">Created At</th>
+                        <th style="width: 15%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if annexures %}
+                        {% for annexure in annexures %}
+                        <tr>
+                            <td class="text-wrap">{{ annexure.scope_area }}</td>
+                            <td>
+                                {% if annexure.audit_procedure_id %}
+                                    {% set procedure = get_procedure_details(annexure.audit_procedure_id) %}
+                                    {% if procedure %}
+                                        <span class="badge bg-info text-wrap">{{ procedure.task_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Procedure not found</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">No procedure linked</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-wrap">{{ annexure.annexure_name }}</td>
+                            <td class="text-wrap">{{ annexure.description }}</td>
+                            <td>{{ annexure.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-info view-annexure" data-annexure-id="{{ annexure._id }}" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="{{ url_for('export_annexure_excel', client_id=client._id, annexure_id=annexure._id) }}" 
+                                       class="btn btn-success" title="Export to Excel">
+                                        <i class="fas fa-file-excel"></i>
+                                    </a>
+                                    <a href="{{ url_for('export_annexure_table', client_id=client._id, annexure_id=annexure._id) }}" 
+                                       class="btn btn-primary" title="Export to Word">
+                                        <i class="fas fa-file-word"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_annexure', client_id=client._id, annexure_id=annexure._id, start_date=start_date, end_date=end_date) }}" 
+                                       class="btn btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-danger delete-annexure" data-annexure-id="{{ annexure._id }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No annexures found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add this CSS to your existing styles -->
+<style>
+    .table td {
+        vertical-align: middle;
+        padding: 0.5rem;
+    }
+    
+    .table .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .table .text-wrap {
+        white-space: normal;
+        word-wrap: break-word;
+        max-width: 200px;
+    }
+    
+    .table .badge {
+        font-size: 85%;
+        font-weight: normal;
+        padding: 0.4em 0.6em;
+    }
+    
+    .btn-group > .btn {
+        flex: 0 0 auto;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+</style>
+
+
+<!-- View Annexure Modal -->
+<!-- View Annexure Modal -->
+<div class="modal fade" id="viewAnnexureModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">View Annexure</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="annexureDetails"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeScopeProcedures();
+    initializeColumnManagement();
+    initializeTableManagement();
+    initializeAnnexureForm();
+    initializeViewAnnexure();
+    initializeViewHandlers();
+    initializeDeleteHandlers();
+    initializeImportHandlers();
+    initializeDeleteHandlers();
+    initializeTableSearch();
+    initializeSearchTooltips(); // Add this line
+});
+    
+// Scope and Procedure Handling
+function initializeScopeProcedures() {
+    const scopeSelect = document.querySelector('select[name="scope_area"]');
+    const procedureSelect = document.getElementById('auditProcedureSelect');
+    
+    if (!scopeSelect || !procedureSelect) return;
+
+    scopeSelect.addEventListener('change', function() {
+        loadProcedures(this).catch(error => {
+            console.error('Error in scope change handler:', error);
+            procedureSelect.disabled = false;
+            procedureSelect.innerHTML = '<option value="">Select Procedure (Optional)</option>';
+        });
+    });
+}
+
+async function loadProcedures(scopeSelect, procedureSelect) {
+    try {
+        const scopeArea = scopeSelect.value;
+        if (!scopeArea) {
+            resetProcedureSelect(procedureSelect);
+            return;
+        }
+
+        const startDate = document.querySelector('input[name="start_date"]').value;
+        const endDate = document.querySelector('input[name="end_date"]').value;
+
+        showProcedureLoading(procedureSelect);
+
+        const response = await fetch(
+            `/client/${getClientId()}/get-audit-procedures/${encodeURIComponent(scopeArea)}?` +
+            new URLSearchParams({
+                start_date: startDate,
+                end_date: endDate
+            })
+        );
+
+        if (!response.ok) throw new Error('Failed to fetch procedures');
+
+        const data = await response.json();
+        
+        // Log the received procedures for debugging
+        console.log('Received procedures:', data.procedures);
+
+        updateProcedureOptions(procedureSelect, data.procedures);
+
+    } catch (error) {
+        console.error('Error loading procedures:', error);
+        resetProcedureSelect(procedureSelect, true);
+    }
+}
+
+function updateProcedureOptions(selectElement, procedures) {
+    selectElement.innerHTML = '<option value="">Select Procedure (Optional)</option>';
+    
+    if (procedures && procedures.length > 0) {
+        procedures.forEach(proc => {
+            const option = document.createElement('option');
+            option.value = proc.id; // Make sure this is the correct ID
+            option.textContent = proc.name || proc.procedure;
+            selectElement.appendChild(option);
+        });
+    } else {
+        const option = document.createElement('option');
+        option.value = "";
+        option.textContent = "No procedures available";
+        option.disabled = true;
+        selectElement.appendChild(option);
+    }
+}
+
+// Helper functions for procedure dropdown
+function showProcedureLoading(selectElement) {
+    selectElement.disabled = true;
+    selectElement.innerHTML = '<option value="">Loading procedures...</option>';
+}
+
+function resetProcedureSelect(selectElement, isError = false) {
+    selectElement.disabled = false;
+    if (isError) {
+        selectElement.innerHTML = '<option value="">Error loading procedures</option>';
+    } else {
+        selectElement.innerHTML = '<option value="">Select Procedure (Optional)</option>';
+    }
+}
+
+function updateProcedureOptions(selectElement, procedures) {
+    selectElement.innerHTML = '<option value="">Select Procedure (Optional)</option>';
+    
+    if (procedures && procedures.length > 0) {
+        procedures.forEach(proc => {
+            const option = document.createElement('option');
+            option.value = proc.id;
+            option.textContent = proc.name || proc.task_name;
+            selectElement.appendChild(option);
+        });
+    } else {
+        const option = document.createElement('option');
+        option.value = "";
+        option.textContent = "No procedures available";
+        option.disabled = true;
+        selectElement.appendChild(option);
+    }
+    
+    selectElement.disabled = false;
+}
+
+function getPeriodDates() {
+    const periodBanner = document.querySelector('.bg-info.text-white');
+    if (!periodBanner) return null;
+
+    const periodText = periodBanner.textContent;
+    const dates = periodText.match(/(\d{4}-\d{2}-\d{2})/g);
+    
+    return dates?.length >= 2 ? {
+        startDate: dates[0],
+        endDate: dates[1]
+    } : null;
+}
+
+function getClientId() {
+    const pathParts = window.location.pathname.split('/');
+    const clientIndex = pathParts.indexOf('client') + 1;
+    return pathParts[clientIndex];
+}
+
+function showToast(title, message) {
+    const toastEl = document.getElementById('notificationToast');
+    if (!toastEl) {
+        console.error('Toast element not found');
+        alert(`${title}: ${message}`);
+        return;
+    }
+    
+    const toast = new bootstrap.Toast(toastEl);
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMessage').textContent = message;
+    toast.show();
+}
+    
+    // Column Management
+    function initializeColumnManagement() {
+    const addColumnBtn = document.getElementById('addColumn');
+    const headerInput = document.getElementById('columnHeader');
+    const columnsList = document.getElementById('columnsList');
+    
+    if (!addColumnBtn || !headerInput || !columnsList) return;
+
+    // Maintain array of custom columns
+    let customColumns = [];
+
+    addColumnBtn.addEventListener('click', function() {
+        const header = headerInput.value.trim();
+        if (header) {
+            // Add to custom columns array
+            customColumns.push(header);
+            
+            // Add column to table
+            addNewColumn(header);
+            
+            // Add to columns list display
+            addColumnToList(header);
+            
+            // Clear input
+            headerInput.value = '';
+        }
+    });
+
+    function addColumnToList(header) {
+        const badge = document.createElement('div');
+        badge.className = 'badge bg-primary me-2 mb-2';
+        badge.innerHTML = `${header} <i class="fas fa-times ms-1" style="cursor: pointer;"></i>`;
+        
+        // Add delete functionality
+        badge.querySelector('i').addEventListener('click', function() {
+            const index = customColumns.indexOf(header);
+            if (index > -1) {
+                customColumns.splice(index, 1);
+                badge.remove();
+                removeTableColumn(header);
+            }
+        });
+        
+        columnsList.appendChild(badge);
+    }
+}
+
+function addNewColumn(header) {
+    const table = document.getElementById('annexureTable');
+    if (!table) return;
+
+    // Add header
+    const headerRow = table.querySelector('thead tr');
+    const actionCell = headerRow.lastElementChild;
+    const th = document.createElement('th');
+    th.textContent = header;
+    headerRow.insertBefore(th, actionCell);
+
+    // Add cells to all existing rows
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const cell = document.createElement('td');
+        cell.innerHTML = '<input type="text" class="form-control" name="table_data[]">';
+        row.insertBefore(cell, row.lastElementChild);
+    });
+}
+
+function removeTableColumn(header) {
+    const table = document.getElementById('annexureTable');
+    if (!table) return;
+
+    // Find column index
+    const headers = table.querySelectorAll('thead th');
+    let columnIndex = -1;
+    headers.forEach((th, index) => {
+        if (th.textContent === header) columnIndex = index;
+    });
+
+    if (columnIndex > -1) {
+        // Remove header
+        headers[columnIndex].remove();
+
+        // Remove cells from all rows
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            row.children[columnIndex].remove();
+        });
+    }
+}
+    
+    // Table Management
+    function initializeTableManagement() {
+    const addRowBtn = document.getElementById('addRow');
+    if (!addRowBtn) return;
+
+    addRowBtn.addEventListener('click', addNewRow);
+
+    // Initialize row deletion handlers
+    document.querySelector('#annexureTable tbody')?.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-row')) {
+            deleteRow(e.target.closest('tr'));
+        }
+    });
+}
+
+function addNewRow() {
+    const tbody = document.querySelector('#annexureTable tbody');
+    if (!tbody) return;
+
+    const rowCount = tbody.children.length;
+    const columnCount = document.querySelectorAll('#annexureTable thead th').length - 2;
+
+    const newRow = document.createElement('tr');
+    
+    // Add Sr. No. cell
+    const srNoCell = document.createElement('td');
+    srNoCell.textContent = rowCount + 1;
+    newRow.appendChild(srNoCell);
+
+    // Add data cells
+    for (let i = 0; i < columnCount; i++) {
+        const cell = document.createElement('td');
+        cell.innerHTML = '<input type="text" class="form-control" name="table_data[]">';
+        newRow.appendChild(cell);
+    }
+
+    // Add action cell
+    const actionCell = document.createElement('td');
+    actionCell.innerHTML = `
+        <button type="button" class="btn btn-danger btn-sm delete-row">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    newRow.appendChild(actionCell);
+
+    tbody.appendChild(newRow);
+}
+
+function deleteRow(row) {
+    if (!row) return;
+    row.remove();
+    updateRowNumbers();
+}
+
+function updateRowNumbers() {
+    const rows = document.querySelectorAll('#annexureTable tbody tr');
+    rows.forEach((row, index) => {
+        row.firstElementChild.textContent = index + 1;
+    });
+}
+    // Annexure Handlers
+    function initializeAnnexureHandlers() {
+        initializeViewAnnexure();
+        initializeDeleteAnnexure();
+        initializeExportHandlers();
+    }
+    
+    function initializeViewAnnexure() {
+    const viewButtons = document.querySelectorAll('.view-annexure');
+    if (!viewButtons.length) return;
+
+    viewButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const annexureId = this.dataset.annexureId;
+            if (!annexureId) {
+                showToast('Error', 'Invalid annexure ID');
+                return;
+            }
+            await viewAnnexureDetails(annexureId);
+        });
+    });
+}
+
+async function viewAnnexureDetails(annexureId) {
+    const modal = new bootstrap.Modal(document.getElementById('viewAnnexureModal'));
+    const detailsContainer = document.getElementById('annexureDetails');
+    
+    try {
+        detailsContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+        modal.show();
+
+        const response = await fetch(`/client/${getClientId()}/annexures/view/${annexureId}`);
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || 'Failed to load annexure');
+        if (!data.success) throw new Error(data.error || 'Failed to load annexure data');
+
+        const annexure = data.annexure;
+        detailsContainer.innerHTML = `
+            <div class="mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Scope Area:</h6>
+                        <p class="text-primary">${annexure.scope_area}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Annexure Name:</h6>
+                        <p class="text-primary">${annexure.annexure_name}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6>Description:</h6>
+                        <p class="text-primary">${annexure.description}</p>
+                    </div>
+                </div>
+                ${generateAnnexureTableHtml(annexure)}
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('View error:', error);
+        detailsContainer.innerHTML = `
+            <div class="alert alert-danger">
+                Error loading annexure: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// In the generateAnnexureTableHtml function
+function generateAnnexureTableHtml(annexure) {
+    const tableData = annexure.table_data || [];
+    const columns = 4; // Number of data columns (excluding Sr. No.)
+    const rows = [];
+
+    // Add audit procedure info if available
+    const procedureHtml = annexure.procedure_details ? `
+        <div class="row mb-3">
+            <div class="col-12">
+                <h6 class="fw-bold">Audit Procedure:</h6>
+                <p>${annexure.procedure_details.task_name || 'No name available'}</p>
+                ${annexure.procedure_details.procedure ? 
+                    `<small class="text-muted">${annexure.procedure_details.procedure}</small>` : 
+                    ''}
+            </div>
+        </div>
+    ` : '';
+
+    // Group data into rows
+    for (let i = 0; i < tableData.length; i += columns) {
+        rows.push(tableData.slice(i, i + columns));
+    }
+
+    return `
+        ${procedureHtml}
+        <div class="table-responsive mt-4">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sr. No.</th>
+                        <th>Document Reference</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map((row, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            ${row.map(cell => `<td>${cell || '-'}</td>`).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+    
+function initializeDeleteAnnexure() {
+    document.querySelectorAll('.delete-annexure').forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const annexureId = this.dataset.annexureId;
+            
+            if (confirm('Are you sure you want to delete this annexure?')) {
+                const row = this.closest('tr');
+                try {
+                    const response = await fetch(
+                        `/client/${getClientId()}/annexures/delete/${annexureId}`, 
+                        { method: 'DELETE' }
+                    );
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showToast('Success', 'Annexure deleted successfully');
+                        // Check if this is the last row
+                        const tbody = row.parentElement;
+                        row.remove();
+                        
+                        if (tbody.children.length === 0) {
+                            tbody.innerHTML = `
+                                <tr>
+                                    <td colspan="6" class="text-center">No annexures found</td>
+                                </tr>
+                            `;
+                        }
+                    } else {
+                        throw new Error(data.error || 'Failed to delete annexure');
+                    }
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    showToast('Error', 'Failed to delete annexure: ' + error.message);
+                }
+            }
+        });
+    });
+}
+    // Import Handlers
+    function initializeImportHandlers() {
+    const importForm = document.getElementById('importForm');
+    if (!importForm) return;
+
+    // Initialize scope area change handler for import form
+    const importScopeArea = document.getElementById('importScopeArea');
+    if (importScopeArea) {
+        importScopeArea.addEventListener('change', function() {
+            handleImportScopeAreaChange(this);
+        });
+    }
+
+    // Handle form submission
+    importForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitButton = document.getElementById('importSubmitBtn');
+
+        try {
+            // Validate form
+            if (!validateImportForm()) {
+                return;
+            }
+
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Importing...';
+
+            // Create FormData
+            const formData = new FormData(this);
+
+            // Add client ID
+            const clientId = getClientId();
+            formData.append('client_id', clientId);
+
+            // Send request
+            const response = await fetch(`/client/${clientId}/annexures/import`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showToast('Success', 'Annexure imported successfully');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                throw new Error(result.error || 'Import failed');
+            }
+
+        } catch (error) {
+            console.error('Import error:', error);
+            showToast('Error', error.message || 'Failed to import annexure');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-upload me-1"></i> Import';
+        }
+    });
+
+    // File input validation
+    const fileInput = importForm.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', validateFileInput);
+    }
+}
+
+async function handleImportScopeAreaChange(select) {
+    const procedureSelect = document.getElementById('importAuditProcedure');
+    if (!procedureSelect) return;
+
+    try {
+        const scopeArea = select.value;
+        if (!scopeArea) {
+            resetProcedureSelect(procedureSelect);
+            return;
+        }
+
+        const startDate = document.querySelector('input[name="start_date"]').value;
+        const endDate = document.querySelector('input[name="end_date"]').value;
+
+        procedureSelect.disabled = true;
+        procedureSelect.innerHTML = '<option value="">Loading procedures...</option>';
+
+        const response = await fetch(
+            `/client/${getClientId()}/get-audit-procedures/${encodeURIComponent(scopeArea)}?` +
+            new URLSearchParams({
+                start_date: startDate,
+                end_date: endDate
+            })
+        );
+
+        const data = await response.json();
+
+        updateImportProcedureOptions(procedureSelect, data.procedures);
+
+    } catch (error) {
+        console.error('Error loading procedures:', error);
+        procedureSelect.innerHTML = '<option value="">Error loading procedures</option>';
+        procedureSelect.disabled = false;
+    }
+}
+function showToast(title, message) {
+    const toastEl = document.getElementById('notificationToast');
+    if (!toastEl) {
+        console.error('Toast element not found');
+        alert(`${title}: ${message}`);
+        return;
+    }
+    
+    const toast = new bootstrap.Toast(toastEl);
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMessage').textContent = message;
+    toast.show();
+}
+
+function getClientId() {
+    const pathParts = window.location.pathname.split('/');
+    const clientIndex = pathParts.indexOf('client') + 1;
+    return pathParts[clientIndex];
+}
+
+function validateImportForm() {
+    const form = document.getElementById('importForm');
+    const requiredFields = ['scope_area', 'annexure_name', 'description', 'file'];
+    let isValid = true;
+
+    requiredFields.forEach(field => {
+        const input = form.querySelector(`[name="${field}"]`);
+        if (!input || !input.value.trim()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+
+    return isValid;
+}
+
+function validateFileInput(e) {
+    const file = e.target.files[0];
+    if (file) {
+        if (!file.name.toLowerCase().endsWith('.xlsx')) {
+            showToast('Error', 'Please select an Excel (.xlsx) file');
+            e.target.value = ''; // Clear the input
+            return false;
+        }
+        
+        // Check file size (e.g., max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Error', 'File size should be less than 5MB');
+            e.target.value = '';
+            return false;
+        }
+    }
+    return true;
+}
+
+function updateImportProcedureOptions(selectElement, procedures) {
+    selectElement.innerHTML = '<option value="">Select Procedure (Optional)</option>';
+    
+    if (procedures && procedures.length > 0) {
+        procedures.forEach(proc => {
+            const option = document.createElement('option');
+            option.value = proc.id;
+            option.textContent = proc.name;
+            selectElement.appendChild(option);
+        });
+    } else {
+        const option = document.createElement('option');
+        option.value = "";
+        option.textContent = "No procedures available";
+        option.disabled = true;
+        selectElement.appendChild(option);
+    }
+    
+    selectElement.disabled = false;
+}
+
+function showLoadingSpinner(element, text = 'Loading...') {
+    element.disabled = true;
+    element.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${text}`;
+}
+
+function hideLoadingSpinner(element, originalText) {
+    element.disabled = false;
+    element.innerHTML = originalText;
+}
+    // Helper Functions
+    function getPeriodDates() {
+        const periodHeader = document.querySelector('.card-header');
+        const periodText = periodHeader?.textContent || '';
+        const dates = periodText.match(/(\d{4}-\d{2}-\d{2})/g);
+        
+        return dates?.length >= 2 ? {
+            startDate: dates[0],
+            endDate: dates[1]
+        } : null;
+    }
+    
+    function getClientId() {
+        const pathParts = window.location.pathname.split('/');
+        const clientIndex = pathParts.indexOf('client') + 1;
+        return pathParts[clientIndex];
+    }
+    
+    function updateRowNumbers() {
+        const rows = document.querySelectorAll('#annexureTable tbody tr');
+        rows.forEach((row, index) => {
+            row.cells[0].textContent = index + 1;
+        });
+    }
+    
+    function generateDataCells(count) {
+    return Array(count).fill('')
+        .map((_, index) => {
+            if (index === 2) return '<td><input type="number" class="form-control" name="table_data[]"></td>';
+            return '<td><input type="text" class="form-control" name="table_data[]"></td>';
+        })
+        .join('');
+}
+    function showToast(title, message) {
+        const toastEl = document.getElementById('notificationToast');
+        if (!toastEl) {
+            console.error('Toast element not found');
+            alert(`${title}: ${message}`);
+            return;
+        }
+        
+        const toast = new bootstrap.Toast(toastEl);
+        document.getElementById('toastTitle').textContent = title;
+        document.getElementById('toastMessage').textContent = message;
+        toast.show();
+    }
+    
+    // Export Functions
+    function initializeExportHandlers() {
+        document.querySelectorAll('.export-excel').forEach(button => {
+            button.addEventListener('click', (e) => handleExport(e, 'excel'));
+        });
+    
+        document.querySelectorAll('.export-table').forEach(button => {
+            button.addEventListener('click', (e) => handleExport(e, 'table'));
+        });
+    }
+    
+    async function handleExport(event, format) {
+        event.preventDefault();
+        const button = event.currentTarget;
+        const annexureId = button.closest('tr').querySelector('.view-annexure').dataset.annexureId;
+        
+        try {
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            
+            const response = await fetch(`/client/${getClientId()}/annexures/export/${annexureId}/${format}`);
+            if (!response.ok) throw new Error('Export failed');
+            
+            const blob = await response.blob();
+            downloadFile(blob, format);
+            
+            showToast('Success', 'Export completed successfully');
+        } catch (error) {
+            console.error('Export error:', error);
+            showToast('Error', 'Failed to export annexure');
+        } finally {
+            button.disabled = false;
+            button.innerHTML = format === 'excel' ? 
+                '<i class="fas fa-file-excel"></i> Excel' : 
+                '<i class="fas fa-file-word"></i> Table';
+        }
+    }
+    
+// Initialize view and delete handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // ... your existing initialization code ...
+    initializeViewHandlers();
+    initializeDeleteHandlers();
+});
+
+function initializeViewHandlers() {
+    document.querySelectorAll('.view-annexure').forEach(button => {
+        button.addEventListener('click', async function() {
+            const annexureId = this.getAttribute('data-annexure-id');
+            const modal = new bootstrap.Modal(document.getElementById('viewAnnexureModal'));
+            const detailsContainer = document.getElementById('annexureDetails');
+            
+            try {
+                // Show loading state
+                detailsContainer.innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading annexure details...</p>
+                    </div>
+                `;
+                modal.show();
+
+                const response = await fetch(`/client/${getClientId()}/annexures/view/${annexureId}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Failed to load annexure');
+                if (!data.success) throw new Error(data.error || 'Failed to load annexure data');
+
+                const annexure = data.annexure;
+                detailsContainer.innerHTML = `
+                    <div class="mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Scope Area:</h6>
+                                <p>${annexure.scope_area || '-'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Annexure Name:</h6>
+                                <p>${annexure.annexure_name || '-'}</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <h6 class="fw-bold">Description:</h6>
+                                <p>${annexure.description || '-'}</p>
+                            </div>
+                        </div>
+                        ${generateAnnexureTableHtml(annexure)}
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <small class="text-muted">Created: ${annexure.created_at || '-'}</small>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <small class="text-muted">Last Updated: ${annexure.updated_at || '-'}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('View error:', error);
+                detailsContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading annexure: ${error.message}
+                    </div>
+                `;
+            }
+        });
+    });
+}
+
+function generateTableRows(tableData) {
+    if (!tableData || !tableData.length) return '';
+    
+    let rows = '';
+    const columnsPerRow = 4;
+    
+    for (let i = 0; i < tableData.length; i += columnsPerRow) {
+        const rowNum = Math.floor(i / columnsPerRow) + 1;
+        const cells = tableData.slice(i, i + columnsPerRow);
+        
+        rows += `
+            <tr>
+                <td>${rowNum}</td>
+                ${cells.map(cell => `<td>${cell || '-'}</td>`).join('')}
+            </tr>
+        `;
+    }
+    
+    return rows;
+}
+
+function initializeDeleteHandlers() {
+    document.querySelectorAll('.delete-annexure').forEach(button => {
+        button.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (!confirm('Are you sure you want to delete this annexure?')) {
+                return;
+            }
+            
+            const annexureId = this.getAttribute('data-annexure-id');
+            const row = this.closest('tr');
+            
+            try {
+                const response = await fetch(
+                    `/client/${getClientId()}/annexures/delete/${annexureId}`,
+                    { method: 'DELETE' }
+                );
+                
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.error || 'Failed to delete annexure');
+                
+                if (data.success) {
+                    showToast('Success', 'Annexure deleted successfully');
+                    row.remove();
+                    
+                    // Check if table is empty
+                    const tbody = document.querySelector('#annexureTable tbody');
+                    if (!tbody.children.length) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center">No annexures found</td>
+                            </tr>
+                        `;
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to delete annexure');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('Error', error.message);
+            }
+        });
+    });
+}
+
+function getClientId() {
+    const pathParts = window.location.pathname.split('/');
+    const clientIndex = pathParts.indexOf('client') + 1;
+    return pathParts[clientIndex];
+}
+
+
+    function downloadFile(blob, format) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `Annexure_${format}_${new Date().toISOString().slice(0,10)}.${format === 'excel' ? 'xlsx' : 'docx'}`;
+        
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }
+    
+    // Import Function
+    async function handleImport(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitButton = form.querySelector('button[type="submit"]');
+        
+        try {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+            
+            const response = await fetch(`/client/${getClientId()}/annexures/import`, {
+                method: 'POST',
+                body: new FormData(form)
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                showToast('Success', 'Annexure imported successfully');
+                window.location.reload();
+            } else {
+                throw new Error(data.error || 'Import failed');
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            showToast('Error', 'Failed to import annexure: ' + error.message);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-upload"></i> Import Annexure';
+        }
+    }
+    function initializeAnnexureForm() {
+    const form = document.getElementById('annexureForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+
+        try {
+            // Gather form data
+            const formData = new FormData(this);
+            
+            // Add table data
+            const tableData = gatherTableData();
+            formData.delete('table_data[]'); // Clear existing table data
+            tableData.forEach(data => formData.append('table_data[]', data));
+
+            // Send request
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Success', 'Annexure saved successfully');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                throw new Error(result.error || 'Failed to save annexure');
+            }
+
+        } catch (error) {
+            console.error('Save error:', error);
+            showToast('Error', error.message || 'Failed to save annexure');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Save Annexure';
+        }
+    });
+}
+
+function gatherTableData() {
+    const tableData = [];
+    const rows = document.querySelectorAll('#annexureTable tbody tr');
+    
+    rows.forEach(row => {
+        const inputs = row.querySelectorAll('input[name="table_data[]"]');
+        inputs.forEach(input => {
+            tableData.push(input.value || '');  // Push empty string if value is null/undefined
+        });
+    });
+
+    return tableData;
+}
+
+function validateForm() {
+    const requiredFields = ['scope_area', 'annexure_name', 'description'];
+    let isValid = true;
+
+    requiredFields.forEach(field => {
+        const input = document.querySelector(`[name="${field}"]`);
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+
+    return isValid;
+}
+function showToast(title, message) {
+    const toastEl = document.getElementById('notificationToast');
+    if (!toastEl) {
+        console.error('Toast element not found');
+        alert(`${title}: ${message}`);
+        return;
+    }
+    
+    const toast = new bootstrap.Toast(toastEl);
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMessage').textContent = message;
+    toast.show();
+}
+// Update the loadProcedures function
+// Replace the existing loadProcedures function
+async function loadProcedures(scopeSelect) {
+    const procedureSelect = document.getElementById('auditProcedureSelect');
+    const scopeArea = scopeSelect.value;
+    
+    // Initially disable the select while loading
+    procedureSelect.disabled = true;
+    procedureSelect.innerHTML = '<option value="">Loading procedures...</option>';
+    
+    if (!scopeArea) {
+        procedureSelect.innerHTML = '<option value="">Select Procedure (Optional)</option>';
+        procedureSelect.disabled = false;
+        return;
+    }
+
+    try {
+        const startDate = document.querySelector('input[name="start_date"]').value;
+        const endDate = document.querySelector('input[name="end_date"]').value;
+
+        const response = await fetch(
+            `/client/${getClientId()}/get-audit-procedures/${encodeURIComponent(scopeArea)}?` +
+            new URLSearchParams({
+                start_date: startDate,
+                end_date: endDate
+            })
+        );
+
+        if (!response.ok) throw new Error('Failed to fetch procedures');
+
+        const data = await response.json();
+        
+        procedureSelect.innerHTML = '<option value="">Select Procedure (Optional)</option>';
+        
+        if (data.success && data.procedures && data.procedures.length > 0) {
+            data.procedures.forEach(proc => {
+                const option = document.createElement('option');
+                option.value = proc.id;
+                option.textContent = `${proc.name} - ${proc.procedure || 'No description'}`;
+                procedureSelect.appendChild(option);
+            });
+            procedureSelect.disabled = false;
+        } else {
+            const option = document.createElement('option');
+            option.value = "";
+            option.textContent = "No procedures available";
+            option.disabled = true;
+            procedureSelect.appendChild(option);
+        }
+
+    } catch (error) {
+        console.error('Error loading procedures:', error);
+        procedureSelect.innerHTML = '<option value="">Error loading procedures</option>';
+    } finally {
+        procedureSelect.disabled = false;
+    }
+}
+
+// Add event listener for scope area change
+document.addEventListener('DOMContentLoaded', function() {
+    const scopeSelect = document.querySelector('select[name="scope_area"]');
+    if (scopeSelect) {
+        scopeSelect.addEventListener('change', function() {
+            loadProcedures(this);
+        });
+    }
+});
+function gatherTableData() {
+    const tableData = [];
+    const rows = document.querySelectorAll('#annexureTable tbody tr');
+    
+    rows.forEach(row => {
+        row.querySelectorAll('input[name="table_data[]"]').forEach(input => {
+            tableData.push(input.value);
+        });
+    });
+
+    return tableData;
+}
+// Add this function to initialize delete handlers
+function initializeDeleteHandlers() {
+    document.querySelectorAll('.delete-annexure').forEach(button => {
+        button.addEventListener('click', handleDelete);
+    });
+}
+
+// Add this as a separate function to handle deletion
+async function handleDelete(e) {
+    e.preventDefault();
+    const button = e.currentTarget;
+    const annexureId = button.getAttribute('data-annexure-id');
+    
+    if (!annexureId) {
+        showToast('Error', 'Invalid annexure ID');
+        return;
+    }
+
+    if (!confirm('Are you sure you want to delete this annexure?')) {
+        return;
+    }
+
+    try {
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        const response = await fetch(`/client/${getClientId()}/annexures/delete/${annexureId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            const row = button.closest('tr');
+            const tbody = row.parentElement;
+            row.remove();
+            
+            // Check if there are any rows left
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">No annexures found</td>
+                    </tr>
+                `;
+            }
+            
+            showToast('Success', 'Annexure deleted successfully');
+        } else {
+            throw new Error(data.error || 'Failed to delete annexure');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        showToast('Error', error.message || 'Failed to delete annexure');
+    } finally {
+        if (!button.isConnected) return; // Check if button still exists in DOM
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-trash"></i> Delete';
+    }
+}
+
+// Update the existing showToast function if needed
+function showToast(title, message) {
+    const toastEl = document.getElementById('notificationToast');
+    if (!toastEl) {
+        console.error('Toast element not found');
+        alert(`${title}: ${message}`);
+        return;
+    }
+    
+    const toast = new bootstrap.Toast(toastEl);
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMessage').textContent = message;
+    toast.show();
+}
+
+function initializeTableSearch() {
+    const searchInputs = {
+        scope: document.getElementById('searchScopeArea'),
+        procedure: document.getElementById('searchProcedure'),
+        name: document.getElementById('searchAnnexureName'),
+        description: document.getElementById('searchDescription'),
+        date: document.getElementById('searchDate')
+    };
+
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const tbody = document.querySelector('.table tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const noResultsRow = `<tr><td colspan="6" class="text-center">No matching records found</td></tr>`;
+
+    // Function to filter table
+    function filterTable() {
+        const filters = {
+            scope: searchInputs.scope.value.toLowerCase(),
+            procedure: searchInputs.procedure.value.toLowerCase(),
+            name: searchInputs.name.value.toLowerCase(),
+            description: searchInputs.description.value.toLowerCase(),
+            date: searchInputs.date.value.toLowerCase()
+        };
+
+        let hasVisibleRows = false;
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length) {
+                const rowData = {
+                    scope: cells[0].textContent.toLowerCase(),
+                    procedure: cells[1].textContent.toLowerCase(),
+                    name: cells[2].textContent.toLowerCase(),
+                    description: cells[3].textContent.toLowerCase(),
+                    date: cells[4].textContent.toLowerCase()
+                };
+
+                const matches = Object.keys(filters).every(key => 
+                    rowData[key].includes(filters[key])
+                );
+
+                if (matches) {
+                    row.style.display = '';
+                    hasVisibleRows = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+
+        // Show "no results" message if needed
+        const existingNoResults = tbody.querySelector('.no-results-row');
+        if (!hasVisibleRows) {
+            if (!existingNoResults) {
+                tbody.insertAdjacentHTML('beforeend', noResultsRow);
+            }
+        } else if (existingNoResults) {
+            existingNoResults.remove();
+        }
+    }
+
+    // Add event listeners
+    Object.values(searchInputs).forEach(input => {
+        let debounceTimeout;
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(filterTable, 300);
+        });
+    });
+
+    // Clear search
+    clearSearchBtn.addEventListener('click', () => {
+        Object.values(searchInputs).forEach(input => input.value = '');
+        rows.forEach(row => row.style.display = '');
+        const noResultsRow = tbody.querySelector('.no-results-row');
+        if (noResultsRow) noResultsRow.remove();
+    });
+
+    // Add keyboard shortcut (Ctrl/Cmd + F) to focus first search input
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+            e.preventDefault();
+            searchInputs.scope.focus();
+        }
+    });
+}
+
+function toggleTableLoading(show) {
+    const tbody = document.querySelector('.table tbody');
+    if (show) {
+        tbody.style.opacity = '0.5';
+        tbody.style.pointerEvents = 'none';
+    } else {
+        tbody.style.opacity = '1';
+        tbody.style.pointerEvents = 'auto';
+    }
+}
+
+function initializeSearchTooltips() {
+    const tooltips = [
+        { id: 'searchScopeArea', text: 'Search by scope area' },
+        { id: 'searchProcedure', text: 'Search by audit procedure' },
+        { id: 'searchAnnexureName', text: 'Search by annexure name' },
+        { id: 'searchDescription', text: 'Search by description' },
+        { id: 'searchDate', text: 'Search by date (YYYY-MM-DD)' }
+    ];
+
+    tooltips.forEach(({ id, text }) => {
+        const element = document.getElementById(id);
+        if (element) {
+            new bootstrap.Tooltip(element, {
+                placement: 'top',
+                title: text
+            });
+        }
+    });
+}
+    </script>
+
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="toastTitle"></strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "client_page.html" %}
+
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Manage Users for {{ client.company_name }}</h2>
+    
+    <!-- Add User Form -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5>Add New User</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('manage_users', client_id=client._id) }}" method="POST">
+                <div class="form-group mb-3">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="user_type">User Type</label>
+                    <select class="form-control" id="user_type" name="user_type" required>
+                        <option value="">Select User Type</option>
+                        <option value="main">Main User</option>
+                        <option value="team_member">Team Member</option>
+                    </select>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="role">Role</label>
+                    <select class="form-control" id="role" name="role" required>
+                        <option value="">Select Role</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Auditor">Auditor</option>
+                        <option value="Reviewer">Reviewer</option>
+                    </select>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="phone">Phone</label>
+                    <input type="text" class="form-control" id="phone" name="phone" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Add User</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Users Table -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5>Main Users</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in main_users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_user', client_id=client._id, user_id=user._id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No main users added for this client.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Team Members Table -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5>Team Members</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in team_users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_user', client_id=client._id, user_id=user._id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No team members added for this client.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

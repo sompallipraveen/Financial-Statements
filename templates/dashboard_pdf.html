@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Audit Dashboard Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .stats-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f5f5f5;
+        }
+        .progress-bar {
+            background-color: #e9ecef;
+            border-radius: 3px;
+            height: 20px;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            background-color: #007bff;
+            height: 100%;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Audit Dashboard Report</h1>
+        <h3>{{ client.company_name }}</h3>
+        <p>Period: {{ start_date }} to {{ end_date }}</p>
+    </div>
+
+    <!-- Statistics Summary -->
+    <div class="stats-card">
+        <h2>Overview</h2>
+        <p>Total Tasks: {{ total_tasks }}</p>
+        <p>Completed Tasks: {{ completed_tasks }}</p>
+        <p>In Progress Tasks: {{ in_progress_tasks }}</p>
+        <p>Pending Tasks: {{ pending_tasks }}</p>
+    </div>
+
+    <!-- Scope Completion -->
+    <h2>Scope Area Completion</h2>
+    {% for scope, percentage in scope_percentages.items() %}
+    <div class="progress-section">
+        <p>{{ scope }}</p>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ percentage }}%"></div>
+        </div>
+        <p>{{ percentage }}% Complete</p>
+    </div>
+    {% endfor %}
+
+    <!-- Recent Activities -->
+    <h2>Recent Activities</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Scope Area</th>
+                <th>Task</th>
+                <th>Status</th>
+                <th>Team Member</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for activity in recent_activities %}
+            <tr>
+                <td>{{ activity.scope_area }}</td>
+                <td>{{ activity.task_name }}</td>
+                <td>{{ activity.status }}</td>
+                <td>{{ activity.team_member }}</td>
+                <td>{{ activity.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+document.getElementById('exportPdfBtn').addEventListener('click', async function() {
+    try {
+        const startDate = document.getElementById('periodSelect').value;
+        const endDate = document.getElementById('periodSelect').value;
+        
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+
+        const response = await fetch(
+            `/client/${getClientIdFromUrl()}/export_dashboard_pdf?start_date=${startDate}&end_date=${endDate}`,
+            { method: 'POST' }
+        );
+
+        if (!response.ok) throw new Error('Export failed');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audit_dashboard_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('Error', 'Failed to export PDF');
+    } finally {
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-file-pdf me-2"></i>Export PDF';
+    }
+});

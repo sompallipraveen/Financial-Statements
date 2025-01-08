@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Edit New Client{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <h2>Edit Client: {{ client.company_name }}</h2>
+    <form action="{{ url_for('edit_client', client_id=client._id) }}" method="POST">
+        
+        <!-- Basic Client Information -->
+        <div class="form-group">
+            <label for="company_name">Company Name</label>
+            <input type="text" class="form-control" id="company_name" name="company_name" required placeholder="e.g., ABC Pvt Ltd" value="{{ client.company_name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="business_registration_number">Business Registration Number</label>
+            <input type="text" class="form-control" id="business_registration_number" name="business_registration_number" required placeholder="e.g., CIN123456" value="{{ client.business_registration_number }}">
+        </div>
+
+        <div class="form-group">
+            <label for="gstin">GST Identification Number (GSTIN)</label>
+            <input type="text" class="form-control" id="gstin" name="gstin" required placeholder="e.g., 27AAECS1234L1Z2" value="{{ client.gstin }}">
+        </div>
+
+        <div class="form-group">
+            <label for="pan_tan">PAN/TAN</label>
+            <input type="text" class="form-control" id="pan_tan" name="pan_tan" required placeholder="e.g., ABCDE1234F" value="{{ client.pan_tan }}">
+        </div>
+
+        <div class="form-group">
+            <label for="registered_address">Registered Address</label>
+            <textarea class="form-control" id="registered_address" name="registered_address" rows="2" required>{{ client.registered_address }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="operating_addresses">Operating Address(es)</label>
+            <textarea class="form-control" id="operating_addresses" name="operating_addresses" rows="2" required>{{ client.operating_addresses }}</textarea>
+        </div>
+
+        <!-- Key Management Personnel and Ownership -->
+        <div class="form-group">
+            <label for="key_management_personnel">Key Management Personnel (KMP)</label>
+            <textarea class="form-control" id="key_management_personnel" name="key_management_personnel" rows="2" required>{{ client.key_management_personnel }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="ownership_structure">Ownership Structure</label>
+            <textarea class="form-control" id="ownership_structure" name="ownership_structure" rows="2" required>{{ client.ownership_structure }}</textarea>
+        </div>
+
+        <!-- Date of Incorporation and Authorized Signatories -->
+        <div class="form-group">
+            <label for="date_of_incorporation">Date of Incorporation</label>
+            <input type="date" class="form-control" id="date_of_incorporation" name="date_of_incorporation" required value="{{ client.date_of_incorporation }}">
+        </div>
+
+        <div class="form-group">
+            <label for="authorized_signatories">Authorized Signatories</label>
+            <textarea class="form-control" id="authorized_signatories" name="authorized_signatories" rows="2" required>{{ client.authorized_signatories }}</textarea>
+        </div>
+
+        <!-- Bank Account Details -->
+        <div class="form-group">
+            <label for="bank_account_details">Bank Account Details</label>
+            <textarea class="form-control" id="bank_account_details" name="bank_account_details" rows="2" required>{{ client.bank_account_details }}</textarea>
+        </div>
+
+        <!-- Nature of Industry and Business Model -->
+        <h4 class="mt-4">Nature of Industry and Business Model</h4>
+
+        <div class="form-group">
+            <label for="industry_type">Industry Type</label>
+            <select class="form-control" id="industry_type" name="industry_type" required>
+                <option value="">Select Industry Type</option>
+                <option value="Automotive" {% if client.industry_type == "Automotive" %}selected{% endif %}>Automotive</option>
+                <option value="Agriculture and Food Processing" {% if client.industry_type == "Agriculture and Food Processing" %}selected{% endif %}>Agriculture and Food Processing</option>
+                <option value="Aviation" {% if client.industry_type == "Aviation" %}selected{% endif %}>Aviation</option>
+                <option value="Chemicals and Petrochemicals" {% if client.industry_type == "Chemicals and Petrochemicals" %}selected{% endif %}>Chemicals and Petrochemicals</option>
+                <option value="Education" {% if client.industry_type == "Education" %}selected{% endif %}>Education</option>
+                <option value="Government and Public Sector" {% if client.industry_type == "Government and Public Sector" %}selected{% endif %}>Government and Public Sector</option>
+                <option value="Hospitality and Tourism" {% if client.industry_type == "Hospitality and Tourism" %}selected{% endif %}>Hospitality and Tourism</option>
+                <option value="Logistics and Transportation" {% if client.industry_type == "Logistics and Transportation" %}selected{% endif %}>Logistics and Transportation</option>
+                <option value="Media and Entertainment" {% if client.industry_type == "Media and Entertainment" %}selected{% endif %}>Media and Entertainment</option>
+                <option value="Mining and Metal Industry" {% if client.industry_type == "Mining and Metal Industry" %}selected{% endif %}>Mining and Metal Industry</option>
+                <option value="Non-Profit Organizations (NGOs)" {% if client.industry_type == "Non-Profit Organizations (NGOs)" %}selected{% endif %}>Non-Profit Organizations (NGOs)</option>
+                <option value="Professional Services" {% if client.industry_type == "Professional Services" %}selected{% endif %}>Professional Services</option>
+                <option value="Telecommunications" {% if client.industry_type == "Telecommunications" %}selected{% endif %}>Telecommunications</option>
+                <option value="Textile and Apparel" {% if client.industry_type == "Textile and Apparel" %}selected{% endif %}>Textile and Apparel</option>
+                <!-- Existing options -->
+                <option value="Manufacturing" {% if client.industry_type == "Manufacturing" %}selected{% endif %}>Manufacturing</option>
+                <option value="Retail and Consumer Goods" {% if client.industry_type == "Retail and Consumer Goods" %}selected{% endif %}>Retail and Consumer Goods</option>
+                <option value="Financial Services" {% if client.industry_type == "Financial Services" %}selected{% endif %}>Financial Services</option>
+                <option value="Healthcare and Pharmaceuticals" {% if client.industry_type == "Healthcare and Pharmaceuticals" %}selected{% endif %}>Healthcare and Pharmaceuticals</option>
+                <option value="Information Technology and Software Development" {% if client.industry_type == "Information Technology and Software Development" %}selected{% endif %}>Information Technology and Software Development</option>
+                <option value="Construction and Real Estate" {% if client.industry_type == "Construction and Real Estate" %}selected{% endif %}>Construction and Real Estate</option>
+                <option value="Energy and Utilities" {% if client.industry_type == "Energy and Utilities" %}selected{% endif %}>Energy and Utilities</option>
+                <option value="FMCG" {% if client.industry_type == "FMCG" %}selected{% endif %}>FMCG</option>
+                <option value="Textile and Apparel" {% if client.industry_type == "Textile and Apparel" %}selected{% endif %}>Textile and Apparel</option>
+                <option value="Statutory Audit" {% if client.industry_type == "Statutory Audit" %}selected{% endif %}>Statutory Audit</option>
+                <option value="Healthcare Industry" {% if client.industry_type == "Healthcare Industry" %}selected{% endif %}>Healthcare Industry</option>
+                <option value="Shrimp Feed Industry" {% if client.industry_type == "Shrimp Feed Industry" %}selected{% endif %}>Shrimp Feed Industry</option>
+                <option value="Shrimp Process Industry" {% if client.industry_type == "Shrimp Process Industry" %}selected{% endif %}>Shrimp Process Industry</option>
+                <option value="Shrimp Exports Industry" {% if client.industry_type == "Shrimp Exports Industry" %}selected{% endif %}>Shrimp Exports Industry</option>
+            </select>
+        </div>
+        
+
+        <div class="form-group">
+            <label for="other_industry_type">If Other, Specify</label>
+            <input type="text" class="form-control" id="other_industry_type" name="other_industry_type" placeholder="Specify Industry Type if Other selected" value="{{ client.other_industry_type }}">
+        </div>
+
+        <div class="form-group">
+            <label for="nature_of_products">Nature of Products/Services</label>
+            <textarea class="form-control" id="nature_of_products" name="nature_of_products" rows="2" required>{{ client.nature_of_products }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="key_raw_materials">Key Raw Materials</label>
+            <textarea class="form-control" id="key_raw_materials" name="key_raw_materials" rows="2" required>{{ client.key_raw_materials }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="key_markets">Key Markets/Customers</label>
+            <textarea class="form-control" id="key_markets" name="key_markets" rows="2" required>{{ client.key_markets }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="major_competitors">Major Competitors</label>
+            <textarea class="form-control" id="major_competitors" name="major_competitors" rows="2" required>{{ client.major_competitors }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="manufacturing_processes">Manufacturing Processes</label>
+            <textarea class="form-control" id="manufacturing_processes" name="manufacturing_processes" rows="2" required>{{ client.manufacturing_processes }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="key_technology">Key Technology Used</label>
+            <textarea class="form-control" id="key_technology" name="key_technology" rows="2" required>{{ client.key_technology }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="capacity_utilization">Capacity Utilization</label>
+            <input type="text" class="form-control" id="capacity_utilization" name="capacity_utilization" required placeholder="e.g., 75%" value="{{ client.capacity_utilization }}">
+        </div>
+
+        <div class="form-group">
+            <label for="regulatory_requirements">Regulatory Requirements</label>
+            <textarea class="form-control" id="regulatory_requirements" name="regulatory_requirements" rows="2" required>{{ client.regulatory_requirements }}</textarea>
+        </div>
+
+        <!-- 3. Products and Services -->
+        <h4 class="mt-4">Products and Services</h4>
+
+        <div class="form-group">
+            <label for="product_categories">Product Categories</label>
+            <textarea class="form-control" id="product_categories" name="product_categories" rows="2">{{ client.product_categories }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="top_selling_products">Top-Selling Products</label>
+            <textarea class="form-control" id="top_selling_products" name="top_selling_products" rows="2">{{ client.top_selling_products }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="production_capacity">Production Capacity</label>
+            <input type="text" class="form-control" id="production_capacity" name="production_capacity" placeholder="e.g., 1000 units/month" value="{{ client.production_capacity }}">
+        </div>
+
+        <div class="form-group">
+            <label for="lead_time">Lead Time</label>
+            <input type="text" class="form-control" id="lead_time" name="lead_time" placeholder="e.g., 2 weeks" value="{{ client.lead_time }}">
+        </div>
+
+        <div class="form-group">
+            <label for="product_differentiation">Product Differentiation</label>
+            <textarea class="form-control" id="product_differentiation" name="product_differentiation" rows="2">{{ client.product_differentiation }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="product_lifecycle">Product Lifecycle</label>
+            <textarea class="form-control" id="product_lifecycle" name="product_lifecycle" rows="2">{{ client.product_lifecycle }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="pricing_model">Pricing Model</label>
+            <textarea class="form-control" id="pricing_model" name="pricing_model" rows="2">{{ client.pricing_model }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="after_sales_services">After Sales Services</label>
+            <textarea class="form-control" id="after_sales_services" name="after_sales_services" rows="2">{{ client.after_sales_services }}</textarea>
+        </div>
+
+        <!-- 4. Ownership and Governance Structure -->
+        <h4 class="mt-4">Ownership and Governance Structure</h4>
+
+        <div class="form-group">
+            <label for="ownership_structure_details">Ownership Structure</label>
+            <textarea class="form-control" id="ownership_structure_details" name="ownership_structure_details" rows="2">{{ client.ownership_structure_details }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="board_of_directors">Board of Directors</label>
+            <textarea class="form-control" id="board_of_directors" name="board_of_directors" rows="2">{{ client.board_of_directors }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="corporate_governance">Corporate Governance Practices</label>
+            <textarea class="form-control" id="corporate_governance" name="corporate_governance" rows="2">{{ client.corporate_governance }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="legal_advisors_auditors">Legal Advicories and Auditors</label>
+            <textarea class="form-control" id="legal_advisors_auditors" name="legal_advisors_auditors" rows="2">{{ client.legal_advisors_auditors }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="key_policies">Key Policies</label>
+            <textarea class="form-control" id="key_policies" name="key_policies" rows="2">{{ client.key_policies }}</textarea>
+        </div>
+
+
+        <!-- 5. Financial Overview -->
+        <h4 class="mt-4">Financial Overview</h4>
+
+        <div class="form-group">
+            <label for="revenue_streams">Revenue Streams</label>
+            <textarea class="form-control" id="revenue_streams" name="revenue_streams" rows="2">{{ client.revenue_streams }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="cost_structure">Cost Structure</label>
+            <textarea class="form-control" id="cost_structure" name="cost_structure" rows="2">{{ client.cost_structure }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="profit_margins">Profit Margins</label>
+            <textarea class="form-control" id="profit_margins" name="profit_margins" rows="2">{{ client.profit_margins }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="capital_structure">Capital Structure</label>
+            <textarea class="form-control" id="capital_structure" name="capital_structure" rows="2">{{ client.capital_structure }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="financial_ratios">Financial Ratios</label>
+            <textarea class="form-control" id="financial_ratios" name="financial_ratios" rows="2">{{ client.financial_ratios }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="tax_compliance">Tax Compliance</label>
+            <textarea class="form-control" id="tax_compliance" name="tax_compliance" rows="2">{{ client.tax_compliance }}</textarea>
+        </div>
+
+        <!-- 6. Human Resources and Payroll -->
+        <h4 class="mt-4">Human Resources and Payroll</h4>
+
+        <div class="form-group">
+            <label for="employee_count">Employee Count</label>
+            <input type="text" class="form-control" id="employee_count" name="employee_count" placeholder="e.g., 500 employees" value="{{ client.employee_count }}">
+        </div>
+
+        <div class="form-group">
+            <label for="employee_turnover_rate">Employee Turnover</label>
+            <input type="text" class="form-control" id="employee_turnover_rate" name="employee_turnover_rate" placeholder="e.g., 500 employees" value="{{ client.employee_turnover_rate }}">
+        </div>
+
+
+        <div class="form-group">
+            <label for="compensation_benefits">Compensation and Benefits</label>
+            <textarea class="form-control" id="compensation_benefits" name="compensation_benefits" rows="2">{{ client.compensation_benefits }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="training_programs">Training Programs</label>
+            <textarea class="form-control" id="training_programs" name="training_programs" rows="2">{{ client.training_programs }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="performance_management">Performance Management</label>
+            <textarea class="form-control" id="performance_management" name="performance_management" rows="2">{{ client.performance_management }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="workforce_diversity">Workforce Diversity</label>
+            <textarea class="form-control" id="workforce_diversity" name="workforce_diversity" rows="2">{{ client.workforce_diversity }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="labor_union">Compensation and Benefits</label>
+            <textarea class="form-control" id="labor_union" name="labor_union" rows="2">{{ client.labor_union }}</textarea>
+        </div>
+        <!-- 7. IT Systems and Infrastructure -->
+        <h4 class="mt-4">IT Systems and Infrastructure</h4>
+
+        <div class="form-group">
+            <label for="erp_software">ERP/Manufacturing Software</label>
+            <textarea class="form-control" id="erp_software" name="erp_software" rows="2">{{ client.erp_software }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="data_security_measures">Data Security Measures</label>
+            <textarea class="form-control" id="data_security_measures" name="data_security_measures" rows="2">{{ client.data_security_measures }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="system_integrations">System Integration</label>
+            <textarea class="form-control" id="system_integrations" name="system_integrations" rows="2">{{ client.data_system_integrations }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="user_access_control">User Access Controls</label>
+            <textarea class="form-control" id="user_access_control" name="user_access_control" rows="2">{{ client.user_access_control }}</textarea>
+        </div>
+
+        <!-- 8. Risk Management and Compliance -->
+        <h4 class="mt-4">Risk Management and Compliance</h4>
+
+        <div class="form-group">
+            <label for="key_risks">Key Risks Identified</label>
+            <textarea class="form-control" id="key_risks" name="key_risks" rows="2">{{ client.key_risks }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="regulatory_compliance">Compliance with Regulatory Bodies</label>
+            <textarea class="form-control" id="regulatory_compliance" name="regulatory_compliance" rows="2">{{ client.regulatory_compliance }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="insurance_policies">Insurance Polices</label>
+            <textarea class="form-control" id="regulatory_compliance" name="insurance_policies" rows="2">{{ client.insurance_policies }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="internal_controls">Internal Controls</label>
+            <textarea class="form-control" id="internal_controls" name="internal_controls" rows="2">{{ client.internal_controls }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Client</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}
+

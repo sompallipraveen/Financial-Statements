@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Details{% endblock %}
+
+{% block content %}
+<h2>{{ audit.audit_name }}</h2>
+<p><strong>Description:</strong> {{ audit.description }}</p>
+<p><strong>Date:</strong> {{ audit.date }}</p>
+<p><strong>Status:</strong> {{ audit.status }}</p>
+<p><strong>Assigned To:</strong> {{ audit.assigned_to }}</p>
+
+<a href="{{ url_for('edit_audit', audit_id=audit.id) }}">Edit</a>
+<a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+{% endblock %}

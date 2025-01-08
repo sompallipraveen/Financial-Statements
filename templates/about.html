@@ -1,0 +1,547 @@
+{% extends "landing.html" %}
+
+{% block content %}
+```html
+<section class="about-section" id="about">
+    <div class="particles-bg" id="particles-about"></div>
+    <div class="about-container">
+        <div class="about-header">
+            <div class="logo-animation">
+                <i class="fas fa-robot pulse"></i>
+            </div>
+            <h1>About Audit IQ AI</h1>
+            <div class="typewriter-container">
+                <span class="typewriter" id="missionTypewriter"></span>
+                <span class="cursor">|</span>
+            </div>
+        </div>
+
+        <div class="about-grid">
+            <div class="about-content">
+                <div class="mission-card" data-aos="fade-right">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h2>Our Mission</h2>
+                    <p>Transforming internal audits through cutting-edge AI technology and professional expertise.</p>
+                </div>
+
+                <div class="value-cards">
+                    <div class="value-card" data-aos="fade-up" data-aos-delay="100">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Innovation</h3>
+                        <p>Pioneering AI-driven audit solutions</p>
+                    </div>
+
+                    <div class="value-card" data-aos="fade-up" data-aos-delay="200">
+                        <i class="fas fa-chart-line"></i>
+                        <h3>Excellence</h3>
+                        <p>Delivering superior audit quality</p>
+                    </div>
+
+                    <div class="value-card" data-aos="fade-up" data-aos-delay="300">
+                        <i class="fas fa-handshake"></i>
+                        <h3>Integrity</h3>
+                        <p>Maintaining highest ethical standards</p>
+                    </div>
+                </div>
+
+                <div class="stats-container" data-aos="fade-up">
+                    <div class="stat-item">
+                        <i class="fas fa-users"></i>
+                        <span class="stat-number" data-target="1000">0</span>+
+                        <span class="stat-label">Clients Served</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-file-alt"></i>
+                        <span class="stat-number" data-target="50000">0</span>+
+                        <span class="stat-label">Audits Completed</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-industry"></i>
+                        <span class="stat-number" data-target="20">0</span>+
+                        <span class="stat-label">Industries Covered</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="about-visual" data-aos="fade-left">
+                <div class="feature-showcase">
+                    <div class="code-window">
+                        <div class="window-header">
+                            <div class="window-buttons">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <div class="window-title">AI Audit Process</div>
+                        </div>
+                        <div class="code-content" id="codeContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.about-section {
+    padding: 6rem 2rem;
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.95));
+    position: relative;
+    overflow: hidden;
+}
+
+.particles-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.about-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.logo-animation {
+    font-size: 3rem;
+    color: #4f46e5;
+    margin-bottom: 1.5rem;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+.typewriter-container {
+    display: inline-block;
+    font-size: 1.5rem;
+    color: #4f46e5;
+    margin-top: 1rem;
+}
+
+.cursor {
+    animation: blink 1s step-end infinite;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.mission-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+}
+
+.icon-wrapper {
+    width: 60px;
+    height: 60px;
+    background: #4f46e5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.value-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.value-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.value-card:hover {
+    transform: translateY(-5px);
+}
+
+.value-card i {
+    font-size: 2rem;
+    color: #4f46e5;
+    margin-bottom: 1rem;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4f46e5;
+}
+
+.stat-label {
+    color: #64748b;
+    margin-top: 0.5rem;
+}
+
+.code-window {
+    background: #1e293b;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.window-header {
+    background: #334155;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.window-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.window-buttons span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #94a3b8;
+}
+
+.window-title {
+    color: #e2e8f0;
+    margin-left: 1rem;
+    font-family: monospace;
+}
+
+.code-content {
+    padding: 1.5rem;
+    color: #e2e8f0;
+    font-family: 'Fira Code', monospace;
+    line-height: 1.6;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes blink {
+    from, to { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@media (max-width: 768px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .value-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Typewriter effect
+class Typewriter {
+    constructor(element, words, wait = 3000) {
+        this.element = element;
+        this.words = words;
+        this.wait = wait;
+        this.txt = '';
+        this.wordIndex = 0;
+        this.isDeleting = false;
+        this.type();
+    }
+
+    type() {
+        const current = this.wordIndex % this.words.length;
+        const fullTxt = this.words[current];
+
+        if(this.isDeleting) {
+            this.txt = fullTxt.substring(0, this.txt.length - 1);
+        } else {
+            this.txt = fullTxt.substring(0, this.txt.length + 1);
+        }
+
+        this.element.textContent = this.txt;
+
+        let typeSpeed = 100;
+
+        if(this.isDeleting) {
+            typeSpeed /= 2;
+        }
+
+        if(!this.isDeleting && this.txt === fullTxt) {
+            typeSpeed = this.wait;
+            this.isDeleting = true;
+        } else if(this.isDeleting && this.txt === '') {
+            this.isDeleting = false;
+            this.wordIndex++;
+            typeSpeed = 500;
+        }
+
+        setTimeout(() => this.type(), typeSpeed);
+    }
+}
+
+// Stats counter animation
+function animateCounter(el) {
+    const target = parseInt(el.getAttribute('data-target'));
+    let count = 0;
+    const duration = 2000; // 2 seconds
+    const increment = target / (duration / 16); // 60fps
+
+    const updateCount = () => {
+        if(count < target) {
+            count += increment;
+            el.textContent = Math.min(Math.round(count), target);
+            requestAnimationFrame(updateCount);
+        }
+    };
+
+    updateCount();
+}
+
+// Initialize when document loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize typewriter
+    new Typewriter(document.getElementById('missionTypewriter'), [
+        'Transforming Audit Through AI',
+        'Pioneering Smart Solutions',
+        'Driving Audit Innovation',
+        'Empowering Auditors'
+    ]);
+
+    // Initialize stats counters
+    document.querySelectorAll('.stat-number').forEach(el => {
+        animateCounter(el);
+    });
+
+    // Code demonstration content
+    const codeContent = document.getElementById('codeContent');
+    const codeDemo = `
+// AI-Powered Audit Process
+class SmartAudit {
+    analyzeRisk() {
+        // Risk assessment
+    }
+    
+    optimizeProcess() {
+        // Process optimization
+    }
+    
+    generateReport() {
+        // Report generation
+    }
+}`;
+    
+    let index = 0;
+    const typeCode = () => {
+        if(index < codeDemo.length) {
+            codeContent.textContent += codeDemo.charAt(index);
+            index++;
+            setTimeout(typeCode, 50);
+        }
+    };
+    
+    typeCode();
+});
+</script>
+```
+        <div class="team-section">
+            <h2>Leadership Team</h2>
+            <div class="team-grid">
+                <div class="team-card">
+                    <img src="/static/team_01.jpg" alt="Team member" class="team-image">
+                    <h3>CA S Praveen Chowdary</h3>
+                    <p>Founder</p>
+                </div>
+                <div class="team-card">
+                    <img src="/static/team_03.jpg" alt="Team member" class="team-image">
+                    <h3>CMA Urukundu</h3>
+                    <p>Managing Partner</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="values-section">
+            <h2>Our Values</h2>
+            <div class="values-grid">
+                <div class="value-card">
+                    <i class="fas fa-integrity"></i>
+                    <h3>Integrity</h3>
+                    <p>Maintaining the highest standards of professional ethics</p>
+                </div>
+                <div class="value-card">
+                    <i class="fas fa-innovation"></i>
+                    <h3>Innovation</h3>
+                    <p>Continuously evolving our technology for better solutions</p>
+                </div>
+                <div class="value-card">
+                    <i class="fas fa-excellence"></i>
+                    <h3>Excellence</h3>
+                    <p>Delivering exceptional quality in everything we do</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.about-section {
+    padding: 120px 2rem 4rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.about-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.about-header h1 {
+    font-size: 3rem;
+    color: var(--dark);
+    margin-bottom: 1rem;
+}
+
+.subtitle {
+    font-size: 1.25rem;
+    color: #64748b;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-bottom: 4rem;
+}
+
+.about-content h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+}
+
+.about-image img {
+    width: 100%;
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.team-section, .values-section {
+    margin-top: 6rem;
+    text-align: center;
+}
+
+.team-grid, .values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.team-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover {
+    transform: translateY(-5px);
+}
+
+.team-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+}
+
+.value-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.value-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.value-card i {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .about-header h1 {
+        font-size: 2.5rem;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}

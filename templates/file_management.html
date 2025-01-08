@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced File Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Modern styling with better visual hierarchy */
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4caf50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .search-filter-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        select {
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            padding: 40px;
+            text-align: center;
+            border-radius: 5px;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary-color);
+            background: #f0f0f0;
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--primary-color);
+            background: #e3f2fd;
+        }
+
+        .files-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .files-table th,
+        .files-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .files-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .files-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        #successMessage {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>File Management for Client {{ client.company_name }}</h2>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-upload"></i> Upload Files
+                </button>
+            </div>
+        </div>
+
+        <div class="search-filter-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search files...">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="filter-section">
+                <select id="fileTypeFilter">
+                    <option value="">All Types</option>
+                    <option value="image">Images</option>
+                    <option value="document">Documents</option>
+                    <option value="pdf">PDFs</option>
+                    <option value="other">Others</option>
+                </select>
+                <select id="sortBy">
+                    <option value="name">Sort by Name</option>
+                    <option value="date">Sort by Date</option>
+                    <option value="size">Sort by Size</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-zone" id="dropZone">
+                <i class="fas fa-cloud-upload-alt fa-3x"></i>
+                <p>Drag and drop files here or click to select files</p>
+                <input type="file" id="fileInput" multiple style="display: none">
+            </div>
+            <div class="loading-spinner" id="uploadSpinner"></div>
+        </div>
+
+        <table class="files-table" id="filesTable">
+            <thead>
+                <tr>
+                    <th>File Info</th>
+                    <th>Size</th>
+                    <th>Last Modified</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr id="file-{{ file._id }}">
+                    <td>
+                        <div class="file-info">
+                            {% if file.mimeType.startswith('image/') %}
+                                <img src="{{ url_for('download_file', client_id=client_id, file_id=file._id) }}" class="thumbnail" alt="Preview">
+                            {% else %}
+                                <i class="fas {{ get_file_icon(file.mimeType) }} file-icon"></i>
+                            {% endif %}
+                            <span>{{ file.filename }}</span>
+                        </div>
+                    </td>
+                    <td>{{ format_size(file.length) }}</td>
+                    <td>{{ format_date(file.uploadDate) }}</td>
+                    <td>{{ get_file_type(file.mimeType) }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="previewFile('{{ file._id }}', '{{ file.mimeType }}')">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                            <button class="btn btn-success" onclick="downloadFile('{{ file._id }}', '{{ file.filename }}')">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteFile('{{ file._id }}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination" id="pagination">
+            <!-- Pagination will be dynamically populated -->
+        </div>
+    </div>
+
+    <div id="successMessage"></div>
+
+    <script>
+        const client_id = "{{ client_id }}";
+        let currentFiles = [];
+        
+        // Initialize file handling
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFileUpload();
+            initializeSearch();
+            initializeFilters();
+            loadFiles();
+        });
+
+        function initializeFileUpload() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const uploadSpinner = document.getElementById('uploadSpinner');
+
+            // Handle drag and drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        async function handleFiles(files) {
+            const uploadSpinner = document.getElementById('uploadSpinner');
+            uploadSpinner.style.display = 'block';
+
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch(`/client/${client_id}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        showSuccessMessage('File uploaded successfully!');
+                        await loadFiles(); // Reload the file list
+                    } else {
+                        showSuccessMessage('Error: ' + result.error, 'error');
+                    }
+                } catch (error) {
+                    showSuccessMessage('Error uploading file: ' + error, 'error');
+                }
+            }
+
+            uploadSpinner.style.display = 'none';
+        }
+
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', debounce(() => {
+                filterFiles();
+            }, 300));
+        }
+
+        function initializeFilters() {
+            const fileTypeFilter = document.getElementById('fileTypeFilter');
+            const sortBy = document.getElementById('sortBy');
+
+            fileTypeFilter.addEventListener('change', filterFiles);
+            sortBy.addEventListener('change', filterFiles);
+        }
+
+        async function loadFiles() {
+            try {
+                const response = await fetch(`/client/${client_id}/files`);
+                const data = await response.json();
+                currentFiles = data.files;
+                filterFiles();
+            } catch (error) {
+                console.error('Error loading files:', error);
+            }
+        }
+
+        function filterFiles() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const fileType = document.getElementById('fileTypeFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+
+            let filteredFiles = currentFiles.filter(file => {
+                const matchesSearch = file.filename.toLowerCase().includes(searchTerm);
+                const matchesType = !fileType || getFileType(file.mimeType) === fileType;
+                return matchesSearch && matchesType;
+            });
+
+            // Sort files
+            filteredFiles.sort((a, b) => {
+                switch (sortBy) {
+                    case 'name':
+                        return a.filename.localeCompare(b.filename);
+                    case 'date':
+                        return new Date(b.uploadDate) - new Date(a.uploadDate);
+                    case 'size':
+                        return b.length - a.length;
+                    default:
+                        return 0;
+                }
+            });
+
+            updateFileTable(filteredFiles);
+        }
+
+        function updateFileTable(files) {
+            const tbody = document.querySelector('.files-table tbody');
+            tbody.innerHTML = '';
+
+            files.forEach(file => {
+                const row = createFileRow(file);
+                tbody.appendChild(row);
+            });
+        }
+
+        function createFileRow(file) {
+            const row = document.createElement('tr');
+            row.id = `file-${file._id}`;
+            row.innerHTML = `
+                <td>
+                    <div class="file-info">
+                        ${getFilePreview(file)}
+                        <span>${file.filename}</span>
+                    </div>
+                </td>
+                <td>${formatSize(file.length)}</td>
+                <td>${formatDate(file.uploadDate)}</td>
+                <td>${getFileType(file.mimeType)}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="previewFile('${file._id}', '${file.mimeType}')">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        <button class="btn btn-success" onclick="downloadFile('${file._id}', '${file.filename}')">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteFile('${file._id}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </td>
+            `;
+            return row;
+        }
+
+        function getFilePreview(file) {
+            if (file.mimeType.startsWith('image/')) {
+                return `<img src="/client/${client_id}/download/${file._id}" class="thumbnail" alt="Preview">`;
+            }
+            return `<i class="fas ${getFileIcon(file.mimeType)} file-icon"></i>`;
+        }
+
+        function getFileIcon(mimeType) {
+            const iconMap = {
+                'application/pdf': 'fa-file-pdf',
+                'application/msword': 'fa-file-word',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'fa-file-word',
+                'application/vnd.ms-excel': 'fa-file-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'fa-file-excel',
+                'text/plain': 'fa-file-alt',
+                'application/zip': 'fa-file-archive',
+                'image': 'fa-file-image',
+                'video': 'fa-file-video',
+                'audio': 'fa-file-audio'
+            };
+
+            for (const [type, icon] of Object.entries(iconMap)) {
+                if (mimeType.includes(type)) {
+                    return icon;
+                }
+            }
+            return 'fa-file';
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        async function previewFile(fileId, mimeType) {
+            if (mimeType.startsWith('image/')) {
+                const modal = createPreviewModal(`/client/${client_id}/download/${fileId}`);
+                document.body.appendChild(modal);
+                modal.style.display = 'flex';
+            } else if (mimeType === 'application/pdf') {
+                window.open(`/client/${client_id}/view/${fileId}`, '_blank');
+            } else {
+                showSuccessMessage('Preview not available for this file type', 'warning');
+            }
+        }
+
+        function createPreviewModal(src) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            `;
+
+            modal.innerHTML = `
+                <div style="position: relative; max-width: 90%; max-height: 90%;">
+                    <img src="${src}" style="max-width: 100%; max-height: 90vh; object-fit: contain;">
+                    <button class="btn btn-danger" style="position: absolute; top: -40px; right: 0;"
+                            onclick="this.closest('div').parentElement.remove()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            `;
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            return modal;
+        }
+
+        async function downloadFile(fileId, filename) {
+            try {
+                window.location.href = `/client/${client_id}/download/${fileId}`;
+            } catch (error) {
+                showSuccessMessage('Error downloading file', 'error');
+            }
+        }
+
+        async function deleteFile(fileId) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+
+            try {
+                const response = await fetch(`/client/${client_id}/delete/${fileId}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    document.getElementById(`file-${fileId}`).remove();
+                    showSuccessMessage('File deleted successfully');
+                } else {
+                    const error = await response.json();
+                    showSuccessMessage('Error: ' + error.message, 'error');
+                }
+            } catch (error) {
+                showSuccessMessage('Error deleting file', 'error');
+            }
+        }
+
+        function showSuccessMessage(message, type = 'success') {
+            const messageDiv = document.getElementById('successMessage');
+            messageDiv.textContent = message;
+            messageDiv.style.backgroundColor = type === 'success' ? 'var(--success-color)' : 
+                                            type === 'error' ? 'var(--danger-color)' : 
+                                            'var(--warning-color)';
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Pagination functionality
+        function setupPagination(totalItems, itemsPerPage = 10) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.innerText = i;
+                button.onclick = () => changePage(i);
+                if (i === currentPage) button.classList.add('active');
+                pagination.appendChild(button);
+            }
+        }
+
+        let currentPage = 1;
+        function changePage(page) {
+            currentPage = page;
+            filterFiles();
+        }
+
+        // File type helper
+        function getFileType(mimeType) {
+            if (mimeType.startsWith('image/')) return 'image';
+            if (mimeType.includes('pdf')) return 'pdf';
+            if (mimeType.includes('word')) return 'document';
+            if (mimeType.includes('excel')) return 'spreadsheet';
+            return 'other';
+        }
+    </script>

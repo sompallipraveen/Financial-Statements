@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Audit Entry{% endblock %}
+
+{% block content %}
+<h2>{% if audit %}Edit{% else %}Add{% endif %} Audit Entry</h2>
+<form method="POST" action="{{ url_for('add_audit') }}">
+    <label for="audit_name">Audit Name:</label>
+    <input type="text" name="audit_name" id="audit_name" value="{{ audit.audit_name if audit else '' }}" required>
+
+    <label for="description">Description:</label>
+    <textarea name="description" id="description">{{ audit.description if audit else '' }}</textarea>
+
+    <label for="date">Date:</label>
+    <input type="date" name="date" id="date" value="{{ audit.date if audit else '' }}" required>
+
+    <label for="status">Status:</label>
+    <select name="status" id="status">
+        <option value="Pending" {% if audit and audit.status == 'Pending' %}selected{% endif %}>Pending</option>
+        <option value="Completed" {% if audit and audit.status == 'Completed' %}selected{% endif %}>Completed</option>
+    </select>
+
+    <label for="assigned_to">Assigned To:</label>
+    <input type="text" name="assigned_to" id="assigned_to" value="{{ audit.assigned_to if audit else '' }}" required>
+
+    <button type="submit">{% if audit %}Update{% else %}Add{% endif %} Audit</button>
+</form>
+{% endblock %}

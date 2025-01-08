@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Client Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2>Client: {{ client.company_name }}</h2>
+    
+    <!-- Section 1: Company Information -->
+    <div class="card my-3">
+        <div class="card-header">
+            Company Information
+        </div>
+        <div class="card-body">
+            <p><strong>Business Registration Number:</strong> {{ client.business_registration_number }}</p>
+            <p><strong>GSTIN:</strong> {{ client.gstin }}</p>
+            <p><strong>PAN/TAN:</strong> {{ client.pan_tan }}</p>
+            <p><strong>Registered Address:</strong> {{ client.registered_address }}</p>
+            <p><strong>Operating Addresses:</strong> {{ client.operating_addresses }}</p>
+            <p><strong>Key Management Personnel:</strong> {{ client.key_management_personnel }}</p>
+            <p><strong>Ownership Structure:</strong> {{ client.ownership_structure }}</p>
+            <p><strong>Date of Incorporation:</strong> {{ client.date_of_incorporation }}</p>
+            <p><strong>Authorized Signatories:</strong> {{ client.authorized_signatories }}</p>
+            <p><strong>Bank Account Details:</strong> {{ client.bank_account_details }}</p>
+        </div>
+    </div>
+
+    <!-- Section 2: Audit Planning -->
+    <div class="card my-3">
+        <div class="card-header">
+            Audit Planning
+        </div>
+        <div class="card-body">
+            <p>Details about audit planning will go here.</p>
+        </div>
+    </div>
+
+    <!-- Section 3: Audit Finding and Issues Management -->
+    <div class="card my-3">
+        <div class="card-header">
+            Audit Finding and Issues Management
+        </div>
+        <div class="card-body">
+            <p>Details about audit findings and issue management will go here.</p>
+        </div>
+    </div>
+
+    <!-- Section 4: Review and Approval of Workpapers -->
+    <div class="card my-3">
+        <div class="card-header">
+            Review and Approval of Workpapers
+        </div>
+        <div class="card-body">
+            <p>Details about review and approval of workpapers will go here.</p>
+        </div>
+    </div>
+
+    <!-- Section 5: Audit Reporting -->
+    <div class="card my-3">
+        <div class="card-header">
+            Audit Reporting
+        </div>
+        <div class="card-body">
+            <p>Details about audit reporting will go here.</p>
+        </div>
+    </div>
+
+    <!-- Section 6: Audit Closure and Follow-up -->
+    <div class="card my-3">
+        <div class="card-header">
+            Audit Closure and Follow-up
+        </div>
+        <div class="card-body">
+            <p>Details about audit closure and follow-up will go here.</p>
+        </div>
+    </div>
+
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-3">Back to Dashboard</a>
+</div>
+
+</body>
+</html>

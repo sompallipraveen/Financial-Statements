@@ -1,0 +1,258 @@
+{% extends "client_page.html" %}
+
+{% block title %}Overview - {{ client.company_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header Section -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800">{{ client.company_name }}</h1>
+                <p class="text-muted mb-0">Industry: {{ client.industry_type }}</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="window.location.href='{{ url_for('export_overview', client_id=client._id) }}'">
+                    <i class="fas fa-file-export me-2"></i>Export Overview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-white-50 small">Total Revenue</div>
+                            <div class="h5 mb-0">{{ client.revenue_streams|default('Not Available', true) }}</div>
+                        </div>
+                        <div><i class="fas fa-money-bill-wave fa-2x opacity-50"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-white-50 small">Employee Count</div>
+                            <div class="h5 mb-0">{{ client.employee_count|default('N/A', true) }}</div>
+                        </div>
+                        <div><i class="fas fa-users fa-2x opacity-50"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-white-50 small">Completed Tasks</div>
+                            <div class="h5 mb-0">{{ audit_stats.completed_tasks|default(0) }}</div>
+                        </div>
+                        <div><i class="fas fa-tasks fa-2x opacity-50"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-white-50 small">Pending Tasks</div>
+                            <div class="h5 mb-0">{{ audit_stats.pending|default(0) }}</div>
+                        </div>
+                        <div><i class="fas fa-clock fa-2x opacity-50"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row">
+        <!-- Company Overview -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-building me-2"></i>Company Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th width="40%">Registration Number</th>
+                                    <td>{{ client.business_registration_number|default('N/A', true) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>GSTIN</th>
+                                    <td>{{ client.gstin|default('N/A', true) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>PAN/TAN</th>
+                                    <td>{{ client.pan_tan|default('N/A', true) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Incorporation Date</th>
+                                    <td>{{ client.date_of_incorporation|default('N/A', true) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Key Management</th>
+                                    <td>{{ client.key_management_personnel|default('N/A', true) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Statistics -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Audit Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="auditStatsChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Execution Items -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list-alt me-2"></i>Recent Audit Items
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Scope Area</th>
+                                    <th>Task</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for execution in audit_executions %}
+                                    {% for task in execution.tasks[:3] %}  <!-- Show only first 3 tasks -->
+                                    <tr>
+                                        <td>{{ execution.scope_area }}</td>
+                                        <td>{{ task.task_name }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if task.status == 'Completed' 
+                                                                    else 'warning' if task.status == 'In Progress' 
+                                                                    else 'secondary' }}">
+                                                {{ task.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Risk Assessment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Key Risks Identified</h6>
+                        <p>{{ client.key_risks|default('No risks identified', true) }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <h6>Internal Controls</h6>
+                        <p>{{ client.internal_controls|default('No internal controls specified', true) }}</p>
+                    </div>
+                    <div>
+                        <h6>Compliance Status</h6>
+                        <p>{{ client.regulatory_compliance|default('No compliance information available', true) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Audit Stats Chart with actual data
+    const ctx = document.getElementById('auditStatsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Completed', 'In Progress', 'Pending'],
+            datasets: [{
+                data: [
+                    {{ audit_stats.completed_tasks|default(0) }},
+                    {{ audit_stats.in_progress|default(0) }},
+                    {{ audit_stats.pending|default(0) }}
+                ],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',  // green
+                    'rgba(255, 193, 7, 0.8)',  // yellow
+                    'rgba(108, 117, 125, 0.8)'  // gray
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Add hover effects to cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'transform 0.3s ease';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+.table td, .table th {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+</style>
+{% endblock %}

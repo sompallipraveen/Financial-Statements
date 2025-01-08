@@ -1,0 +1,87 @@
+{% extends "client_page.html" %}
+
+{% block title %}Audit Planning{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">{{ client.company_name }} - Audit Planning</h2>
+
+    <!-- Objectives and Scope Section -->
+    <div class="card mb-4">
+        <div class="card-header">Objectives and Scope</div>
+        <div class="card-body">
+            <form action="{{ url_for('update_audit_objectives', client_id=client._id) }}" method="POST">
+                <div class="form-group">
+                    <label for="objectives">Audit Objectives</label>
+                    <textarea class="form-control" id="objectives" name="objectives" rows="3">{{ audit_plan.objectives }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="scope">Audit Scope</label>
+                    <textarea class="form-control" id="scope" name="scope" rows="3">{{ audit_plan.scope }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Timeline Section -->
+    <div class="card mb-4">
+        <div class="card-header">Timeline and Milestones</div>
+        <div class="card-body">
+            <form action="{{ url_for('update_audit_timeline', client_id=client._id) }}" method="POST">
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ audit_plan.start_date }}">
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ audit_plan.end_date }}">
+                </div>
+                <button type="submit" class="btn btn-primary">Update Timeline</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resource Allocation Section -->
+    <div class="card mb-4">
+        <div class="card-header">Resource Allocation</div>
+        <div class="card-body">
+            <form action="{{ url_for('allocate_resources', client_id=client._id) }}" method="POST">
+                <div class="form-group">
+                    <label for="resources">Assigned Team Members</label>
+                    <textarea class="form-control" id="resources" name="resources" rows="2">{{ audit_plan.resources }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Allocate Resources</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Risk Assessment Section -->
+    <div class="card mb-4">
+        <div class="card-header">Risk Assessment and Priority</div>
+        <div class="card-body">
+            <form action="{{ url_for('update_risks', client_id=client._id) }}" method="POST">
+                <div class="form-group">
+                    <label for="risks">Key Risks</label>
+                    <textarea class="form-control" id="risks" name="risks" rows="3">{{ audit_plan.risks }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Risks</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Procedures Section -->
+    <div class="card mb-4">
+        <div class="card-header">Audit Procedures and Programs</div>
+        <div class="card-body">
+            <form action="{{ url_for('update_procedures', client_id=client._id) }}" method="POST">
+                <div class="form-group">
+                    <label for="procedures">Procedures</label>
+                    <textarea class="form-control" id="procedures" name="procedures" rows="4">{{ audit_plan.procedures }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Procedures</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

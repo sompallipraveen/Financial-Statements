@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Required Meta Tags -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Font Awesome for Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- Custom Dashboard CSS -->
+<style>
+    .metric-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .chart-card {
+        height: 300px;
+    }
+    .task-badge {
+        font-size: 0.8rem;
+        padding: 0.3em 0.6em;
+    }
+    .progress-sm {
+        height: 5px;
+    }
+    .dashboard-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        padding: 1.5rem 0;
+        margin-bottom: 2rem;
+    }
+    .audit-timeline {
+        position: relative;
+        padding-left: 45px;
+    }
+    .audit-timeline:before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: -45px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #007bff;
+        border: 2px solid #fff;
+    }
+    .risk-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .risk-high { background-color: #dc3545; }
+    .risk-medium { background-color: #ffc107; }
+    .risk-low { background-color: #28a745; }
+</style>
+
+<!-- Required JavaScript -->
+<!-- jQuery (required for Bootstrap) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Popper.js (required for Bootstrap tooltips and popovers) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+
+<!-- Bootstrap 5 JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Chart.js for graphs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Optional: Moment.js for date handling -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/chart.js" rel="stylesheet">
+
+    <style>
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: #343a40;
+            color: #ffffff;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar h4 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .sidebar a {
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 15px;
+            display: block;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .sidebar a:hover {
+            background-color: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .sidebar a.active {
+            background-color: #0d6efd;
+            color: #ffffff;
+        }
+
+        .sidebar a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Badge for period indication */
+        .badge-period {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+
+        /* Content area styles */
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+
+        /* Alert styles */
+        .alert {
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        /* Toast styles */
+        .toast-container {
+            z-index: 1050;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .content {
+                margin-left: 200px;
+            }
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+        }
+        
+        .nav-link[href*="dashboard"].active {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #0d6efd;
+        }
+
+        .nav-link[href*="dashboard"]:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .nav-link[href*="dashboard"] .sb-nav-link-icon {
+            color: inherit;
+        }
+
+        /* Animation for the icon when hovering */
+        .nav-link[href*="dashboard"]:hover .sb-nav-link-icon i {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
+        }
+        .section-header {
+            color: #6c757d;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1.5rem 1rem 0.5rem;
+            font-weight: 600;
+        }
+
+        .sidebar a {
+            margin: 0.2rem 0;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .sidebar a.active {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+            border-left: 3px solid #0d6efd;
+        }
+
+        .sidebar a i {
+            width: 1.25rem;
+            text-align: center;
+            margin-right: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .badge-period {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+            border-radius: 3px;
+        }
+
+        /* Dark mode styles for sidebar */
+        .sidebar {
+            background-color: #212529;
+        }
+
+        .sidebar a.text-muted {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .sidebar a.text-muted:hover {
+            background-color: transparent;
+            transform: none;
+        }
+        .metric-card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+}
+
+.progress-sm {
+    height: 4px;
+    margin-top: 0.5rem;
+}
+
+.audit-timeline {
+    padding-left: 20px;
+    border-left: 2px solid #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--primary-color);
+}
+
+.dashboard-card {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    .timeline-wrapper {
+        position: relative;
+        padding-left: 50px;
+    }
+
+    .timeline-wrapper::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -30px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #0d6efd;
+        border: 2px solid #fff;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+    }
+
+    .activity-badge {
+        min-width: 80px;
+        text-align: center;
+    }
+
+    /* Dark mode considerations */
+    @media (prefers-color-scheme: dark) {
+        .dashboard-card {
+            background-color: #2d3238;
+            border-color: #404040;
+        }
+
+        .timeline-wrapper::before {
+            background: #404040;
+        }
+
+        .timeline-dot {
+            border-color: #2d3238;
+        }
+    }
+
+    /* Print styles */
+    @media print {
+        .sidebar {
+            display: none;
+        }
+
+        .content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .dashboard-card {
+            break-inside: avoid;
+        }
+
+        .no-print {
+            display: none;
+        }
+    }
+</style>
+
+<!-- Add Chart.js script if not already present -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<div class="sidebar">
+    <h4>{{ client.company_name if client.company_name else 'Client Dashboard' }}</h4>
+
+    <!-- Core Section -->
+    <div class="section-header">Core</div>
+
+    <!-- Overview -->
+<!-- Update this link in client_page.html -->
+<a href="{{ url_for('client_overview', client_id=client_id) }}"
+   class="{{ 'active' if request.endpoint == 'client_overview' }}">
+    <i class="fas fa-home"></i> Overview
+</a>
+
+    <!-- Management Section -->
+    <div class="section-header">Management</div>
+
+    <!-- File Management -->
+    <a href="{{ url_for('file_management', client_id=client_id) }}"
+       class="{{ 'active' if request.endpoint == 'file_management' }}"
+       title="Manage Files">
+        <i class="fas fa-file-alt"></i> File Management
+    </a>
+
+    <!-- Team Management -->
+    <a href="{{ url_for('manage_users', client_id=client_id) }}"
+       class="{{ 'active' if request.endpoint == 'manage_users' }}"
+       title="Manage Users">
+        <i class="fas fa-users"></i> Manage Users
+    </a>
+
+    <!-- Audit Management Section -->
+    <div class="section-header">Audit Management</div>
+
+    <!-- Add this new Dashboard link -->
+<a href="{{ url_for('audit_dashboard', client_id=client_id) }}"
+class="{{ 'active' if request.endpoint == 'audit_dashboard' }}"
+title="Audit Dashboard">
+ <i class="fas fa-chart-line"></i> Audit Dashboard
+</a>
+
+    <!-- Company Information -->
+    <a href="{{ url_for('company_information', client_id=client_id) }}"
+       class="{{ 'active' if request.endpoint == 'company_information' }}"
+       title="Company Information">
+        <i class="fas fa-building"></i> Company Information
+    </a>
+
+    <!-- Select Period -->
+    <a href="{{ url_for('select_period', client_id=client_id) }}"
+       class="{{ 'active' if request.endpoint == 'select_period' }}"
+       title="Select Audit Period">
+        <i class="fas fa-calendar-alt"></i> Select Audit Period
+    </a>
+
+    <!-- Conditional Links for Audit Management -->
+    {% if start_date and end_date %}
+        <!-- Audit Planning -->
+        <a href="{{ url_for('audit_planning', client_id=client_id, start_date=start_date, end_date=end_date) }}"
+           class="{{ 'active' if request.endpoint == 'audit_planning' }}">
+            <i class="fas fa-tasks"></i> Audit Planning
+            <span class="badge-period">{{ start_date[:7] }}</span>
+        </a>
+
+        <!-- Created Audit Plan -->
+        <a href="{{ url_for('created_audit_plan', client_id=client_id, start_date=start_date, end_date=end_date) }}"
+           class="{{ 'active' if request.endpoint == 'created_audit_plan' }}">
+            <i class="fas fa-clipboard-check"></i> Created Audit Plan
+            <span class="badge-period">{{ start_date[:7] }}</span>
+        </a>
+
+        <!-- Audit Execution -->
+        <a href="{{ url_for('audit_execution', client_id=client_id, start_date=start_date, end_date=end_date) }}"
+           class="{{ 'active' if request.endpoint == 'audit_execution' }}">
+            <i class="fas fa-play-circle"></i> Audit Execution
+            <span class="badge-period">{{ start_date[:7] }}</span>
+        </a>
+    {% else %}
+        <!-- Disabled Links for Missing Period -->
+        <a href="#" onclick="showPeriodAlert()" class="text-muted">
+            <i class="fas fa-tasks"></i> Audit Planning
+        </a>
+        <a href="#" onclick="showPeriodAlert()" class="text-muted">
+            <i class="fas fa-clipboard-check"></i> Created Audit Plan
+        </a>
+        <a href="#" onclick="showPeriodAlert()" class="text-muted">
+            <i class="fas fa-play-circle"></i> Audit Execution
+        </a>
+    {% endif %}
+
+    <a href="{{ url_for('annexures', client_id=client_id, start_date=start_date, end_date=end_date) }}"
+   class="{{ 'active' if request.endpoint == 'annexures' }}"
+   title="Annexures">
+    <i class="fas fa-file-alt"></i> Annexures
+    {% if start_date %}
+    <span class="badge-period">{{ start_date[:7] }}</span>
+    {% endif %}
+</a>
+
+    <!-- Navigation Section -->
+    <div class="section-header">Navigation</div>
+
+    <!-- Back to Dashboard -->
+    <a href="{{ url_for('dashboard') }}" title="Return to Dashboard">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Main Content -->
+<div class="content">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show"
+                 role="alert">
+                <strong>{{ 'Error!' if category == 'error' else '' }}</strong> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Page Content -->
+    {% block content %}{% endblock %}
+</div>
+
+
+<!-- Loading Spinner -->
+<div class="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<!-- Period Alert Toast -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="periodAlertToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-info-circle me-2 text-primary"></i>
+            <strong class="me-auto">Select Period</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Please select an audit period first to access this feature.
+            <div class="mt-2">
+                <a href="{{ url_for('select_period', client_id=client._id) }}" class="btn btn-primary btn-sm">
+                    Select Period
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Show period alert
+function showPeriodAlert() {
+    const toast = new bootstrap.Toast(document.getElementById('periodAlertToast'));
+    toast.show();
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function () {
+    const initializeTooltips = () => {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    };
+
+    initializeTooltips();
+});
+
+// Show loading spinner
+function showLoading() {
+    document.querySelector('.loading-spinner').style.display = 'block';
+}
+
+// Hide loading spinner
+function hideLoading() {
+    document.querySelector('.loading-spinner').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set active state for sidebar links
+    const currentPath = window.location.pathname;
+    const sidebarLinks = document.querySelectorAll('.nav-link');
+    
+    sidebarLinks.forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+
+
+
+</body>
+</html>
+```

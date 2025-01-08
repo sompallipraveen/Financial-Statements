@@ -1,0 +1,781 @@
+{% extends "client_page.html" %}
+
+{% block title %}Audit Dashboard - {{ client.company_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Dashboard Header -->
+    <div class="row my-4">
+        <div class="col">
+            <h2 class="mb-0">Audit Dashboard</h2>
+            <p class="text-muted">{{ client.company_name }}</p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <button class="btn btn-outline-primary" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Dashboard
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
+                    <i class="fas fa-download me-2"></i>Export Report
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Period Selection Card -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="card-title mb-0">Select Audit Period</h5>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <select class="form-select me-2" id="periodSelect" onchange="updateDashboard()">
+                        <option value="">Select Period...</option>
+                        {% for period in audit_periods %}
+                            <option value="{{ period.start_date }}|{{ period.end_date }}" 
+                                    {% if period.start_date == start_date and period.end_date == end_date %}selected{% endif %}>
+                                {{ period.start_date }} to {{ period.end_date }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-primary" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Stats Cards Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted">Total Tasks</h6>
+                            <h2 class="mb-0">{{ total_tasks }}</h2>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-tasks fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted">Completed</h6>
+                            <h2 class="mb-0">{{ completed_tasks }}</h2>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted">In Progress</h6>
+                            <h2 class="mb-0">{{ in_progress_tasks }}</h2>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card h-100 border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted">Pending</h6>
+                            <h2 class="mb-0">{{ pending_tasks }}</h2>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Scope Area Completion Progress</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="scopeProgressChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Overall Completion</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="overallProgressChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Recent Activities</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Scope Area</th>
+                                    <th>Task</th>
+                                    <th>Status</th>
+                                    <th>Team Member</th>
+                                    <th>Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td>{{ activity.scope_area }}</td>
+                                    <td>{{ activity.task_name }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if activity.status == 'Completed' 
+                                                               else 'warning' if activity.status == 'In Progress'
+                                                               else 'secondary' }}">
+                                            {{ activity.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ activity.team_member }}</td>
+                                    <td>{{ activity.updated_at|timeago }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Export Dashboard Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="exportForm">
+                    <div class="mb-3">
+                        <label class="form-label">Report Format</label>
+                        <select class="form-select" id="exportFormat">
+                            <option value="pdf">PDF</option>
+                            <option value="excel">Excel</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeCharts">
+                            <label class="form-check-label" for="includeCharts">
+                                Include Charts
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="exportButton">Export</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    initializeCharts();
+    
+    // Initialize export functionality
+    initializeExport();
+});
+// Then add the new functions
+function updateDashboard() {
+    const periodSelect = document.getElementById('periodSelect');
+    if (!periodSelect.value) return;
+
+    const [startDate, endDate] = periodSelect.value.split('|');
+    const clientId = getClientIdFromUrl();
+    
+    // Show loading state
+    const loadingSpinner = document.querySelector('.loading-spinner');
+    if (loadingSpinner) loadingSpinner.style.display = 'block';
+
+    // Redirect to dashboard with selected period
+    window.location.href = `/client/${clientId}/audit_dashboard?start_date=${startDate}&end_date=${endDate}`;
+}
+
+function refreshDashboard() {
+    const periodSelect = document.getElementById('periodSelect');
+    if (periodSelect.value) {
+        updateDashboard();
+    } else {
+        // If no period is selected, just reload the page
+        location.reload();
+    }
+}
+
+// Helper function to get client ID from URL
+function getClientIdFromUrl() {
+    const pathParts = window.location.pathname.split('/');
+    const clientIndex = pathParts.indexOf('client') + 1;
+    if (clientIndex > 0 && clientIndex < pathParts.length) {
+        return pathParts[clientIndex];
+    }
+    throw new Error('Client ID not found in URL');
+}
+
+// Optional: Add keyboard shortcuts for refresh
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'r' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        refreshDashboard();
+    }
+});
+function initializeCharts() {
+    // Scope Progress Chart
+    const scopeCtx = document.getElementById('scopeProgressChart').getContext('2d');
+    new Chart(scopeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ scope_percentages.keys()|list|tojson }},
+            datasets: [{
+                label: 'Completion %',
+                data: {{ scope_percentages.values()|list|tojson }},
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Overall Progress Chart
+    const overallCtx = document.getElementById('overallProgressChart').getContext('2d');
+    new Chart(overallCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'In Progress', 'Pending'],
+            datasets: [{
+                data: [
+                    {{ completed_tasks }},
+                    {{ in_progress_tasks }},
+                    {{ pending_tasks }}
+                ],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.5)',
+                    'rgba(255, 193, 7, 0.5)',
+                    'rgba(220, 53, 69, 0.5)'
+                ],
+                borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(220, 53, 69, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function initializeExport() {
+    document.getElementById('exportButton').addEventListener('click', async function() {
+        const format = document.getElementById('exportFormat').value;
+        const includeCharts = document.getElementById('includeCharts').checked;
+        
+        try {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Exporting...';
+            
+            const response = await fetch(`/client/${getClientIdFromUrl()}/export_dashboard`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    format: format,
+                    includeCharts: includeCharts
+                })
+            });
+            
+            if (!response.ok) throw new Error('Export failed');
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `audit_dashboard_${new Date().toISOString().split('T')[0]}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+            modal.hide();
+            
+        } catch (error) {
+            console.error('Export error:', error);
+            showToast('Error', 'Failed to export dashboard');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = 'Export';
+        }
+    });
+}
+
+function showToast(title, message) {
+    const toast = document.getElementById('notificationToast');
+    if (!toast) return;
+    
+    const toastInstance = new bootstrap.Toast(toast, {
+        delay: 3000
+    });
+    
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMessage').textContent = message;
+    toastInstance.show();
+}
+
+// Add period filter functionality
+function initializePeriodFilter() {
+    const periodSelect = document.getElementById('periodFilter');
+    if (!periodSelect) return;
+
+    periodSelect.addEventListener('change', function() {
+        const [startDate, endDate] = this.value.split('|');
+        if (startDate && endDate) {
+            window.location.href = `/client/${getClientIdFromUrl()}/audit_dashboard?start_date=${startDate}&end_date=${endDate}`;
+        }
+    });
+}
+
+// Add search functionality for activities
+function initializeSearch() {
+    const searchInput = document.getElementById('activitySearch');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+}
+
+// Add refresh functionality
+function refreshDashboard() {
+    location.reload();
+}
+
+// Add auto-refresh timer (every 5 minutes)
+let refreshTimer;
+function startAutoRefresh() {
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(refreshDashboard, 300000); // 5 minutes
+}
+
+// Initialize all dashboard features
+function initializeDashboard() {
+    initializeCharts();
+    initializeExport();
+    initializePeriodFilter();
+    initializeSearch();
+    startAutoRefresh();
+}
+// Optional: Add keyboard shortcuts for refresh
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'r' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        refreshDashboard();
+    }
+});
+
+// Call initialization when document is ready
+document.addEventListener('DOMContentLoaded', initializeDashboard);
+
+// Add window visibility handling
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        clearInterval(refreshTimer);
+    } else {
+        startAutoRefresh();
+    }
+});
+
+document.getElementById('exportPdfBtn').addEventListener('click', async function() {
+    try {
+        const periodSelect = document.getElementById('periodSelect');
+        if (!periodSelect.value) {
+            showToast('Error', 'Please select a period first');
+            return;
+        }
+
+        const [startDate, endDate] = periodSelect.value.split('|');
+        
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+
+        const response = await fetch(
+            `/client/${getClientIdFromUrl()}/export_dashboard_pdf?start_date=${startDate}&end_date=${endDate}`,
+            { method: 'POST' }
+        );
+
+        if (!response.ok) throw new Error('Export failed');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audit_dashboard_${startDate}_${endDate}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('Error', 'Failed to export PDF');
+    } finally {
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-file-pdf me-2"></i>Export PDF';
+    }
+});
+</script>
+
+<!-- Add custom styles -->
+<style>
+.dashboard-card {
+    transition: transform 0.2s;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+
+.chart-container {
+    position: relative;
+    margin: auto;
+}
+
+.activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.status-badge {
+    min-width: 100px;
+    text-align: center;
+}
+
+.search-container {
+    position: relative;
+}
+
+.search-container i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.search-input {
+    padding-left: 30px;
+}
+
+.refresh-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .chart-container {
+        page-break-inside: avoid;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+
+<style>
+    .period-select-container {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    #periodSelect {
+        min-width: 200px;
+    }
+
+    .refresh-btn {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: transform 0.2s;
+    }
+
+    .refresh-btn:hover {
+        transform: rotate(180deg);
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+</style>
+
+
+<!-- Add a refresh button -->
+<button class="btn btn-primary rounded-circle refresh-button no-print" 
+        onclick="refreshDashboard()" 
+        title="Refresh Dashboard">
+    <i class="fas fa-sync-alt"></i>
+</button>
+
+<!-- Add a toast container for notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="toastTitle"></strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+<!-- Add period filter -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <label for="periodFilter" class="form-label">Select Audit Period</label>
+                <select class="form-select" id="periodFilter">
+                    <option value="">All Periods</option>
+                    {% for period in audit_periods %}
+                        <option value="{{ period.start_date }}|{{ period.end_date }}"
+                                {% if period.start_date == start_date and period.end_date == end_date %}selected{% endif %}>
+                            {{ period.start_date }} to {{ period.end_date }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" 
+                           class="form-control search-input" 
+                           id="activitySearch" 
+                           placeholder="Search activities...">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add progress timeline -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Audit Timeline</h5>
+    </div>
+    <div class="card-body">
+        <div class="timeline">
+            {% for period in audit_periods %}
+            <div class="timeline-item">
+                <div class="timeline-marker {{ 'bg-success' if period.completed else 'bg-warning' }}"></div>
+                <div class="timeline-content">
+                    <h6 class="mb-1">{{ period.start_date }} to {{ period.end_date }}</h6>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar" 
+                             role="progressbar" 
+                             style="width: {{ scope_percentages.get(period._id|string, 0) }}%" 
+                             aria-valuenow="{{ scope_percentages.get(period._id|string, 0) }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<!-- Add these styles in your existing style tag -->
+<style>
+    /* Existing styles remain... */
+
+    /* Dashboard specific styles */
+    .dashboard-card {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    .timeline-wrapper {
+        position: relative;
+        padding-left: 50px;
+    }
+
+    .timeline-wrapper::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -30px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #0d6efd;
+        border: 2px solid #fff;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+    }
+
+    .activity-badge {
+        min-width: 80px;
+        text-align: center;
+    }
+
+    /* Dark mode considerations */
+    @media (prefers-color-scheme: dark) {
+        .dashboard-card {
+            background-color: #2d3238;
+            border-color: #404040;
+        }
+
+        .timeline-wrapper::before {
+            background: #404040;
+        }
+
+        .timeline-dot {
+            border-color: #2d3238;
+        }
+    }
+
+    /* Print styles */
+    @media print {
+        .sidebar {
+            display: none;
+        }
+
+        .content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .dashboard-card {
+            break-inside: avoid;
+        }
+
+        .no-print {
+            display: none;
+        }
+    }
+</style>
+
+
+
+<!-- Add Chart.js script if not already present -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+{% endblock %}

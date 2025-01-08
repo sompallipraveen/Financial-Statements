@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audit Planning for {{ client.company_name }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2>Audit Planning for {{ client.company_name }}</h2>
+
+    {% if audit_plan %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Objectives</h5>
+                <p class="card-text">{{ audit_plan.objectives }}</p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Scope</h5>
+                <p class="card-text">{{ audit_plan.scope }}</p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Approach</h5>
+                <p class="card-text">{{ audit_plan.approach }}</p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Timing</h5>
+                <p class="card-text">{{ audit_plan.timing }}</p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Resources</h5>
+                <p class="card-text">{{ audit_plan.resources }}</p>
+            </div>
+        </div>
+    {% else %}
+        <p>No audit planning information found for this client.</p>
+    {% endif %}
+
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</div>
+
+</body>
+</html>

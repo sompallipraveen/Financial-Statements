@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Management</title>
+</head>
+<body>
+    <h1>Document Management Page</h1>
+
+    <h2>Client: {{ client.name }}</h2>
+    <h3>Documents List:</h3>
+    <ul>
+        {% for document in documents %}
+            <li>
+                {{ document['name'] }}
+                <a href="{{ url_for('download_document', client_id=client_id, file_id=document['$id']) }}">Download</a>
+                <form action="{{ url_for('delete_document', client_id=client_id, file_id=document['$id']) }}" method="post" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h3>Upload New Document:</h3>
+    <form action="{{ url_for('upload_document', client_id=client_id) }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
+</body>
+</html>

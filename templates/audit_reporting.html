@@ -1,0 +1,265 @@
+```html
+{% extends "client_page.html" %}
+
+{% block title %}Audit Report for {{ client.company_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Period Banner -->
+    <div class="card bg-primary text-white mb-4 mt-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">Audit Report: {{ client.company_name }}</h4>
+                    <p class="mb-0">Period: {{ start_date }} to {{ end_date }}</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-light" id="exportWord">
+                        <i class="fas fa-file-word me-2"></i>Export to Word
+                    </button>
+                    <button class="btn btn-light" id="exportExcel">
+                        <i class="fas fa-file-excel me-2"></i>Export to Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white">Total Tasks</h6>
+                            <h2 id="totalTasks">{{ total_tasks }}</h2>
+                        </div>
+                        <i class="fas fa-tasks fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white">Completed</h6>
+                            <h2 id="completedTasks">{{ completed_tasks }}</h2>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white">In Progress</h6>
+                            <h2 id="inProgressTasks">{{ in_progress_tasks }}</h2>
+                        </div>
+                        <i class="fas fa-spinner fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white">Pending</h6>
+                            <h2 id="pendingTasks">{{ pending_tasks }}</h2>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if audit_execution_data %}
+        <!-- Scope Area Accordions -->
+        <div class="accordion" id="auditReportAccordion">
+            {% for execution in audit_execution_data %}
+                {% if execution.tasks %}
+                    <div class="accordion-item mb-3">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse{{ loop.index }}">
+                                <div class="d-flex align-items-center w-100">
+                                    <i class="fas fa-folder me-2"></i>
+                                    <span>{{ execution.scope_area }}</span>
+                                    <span class="badge bg-primary ms-2">{{ execution.tasks|length }} Tasks</span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse show"
+                             data-bs-parent="#auditReportAccordion">
+                            <div class="accordion-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Task Name</th>
+                                                <th>Procedure</th>
+                                                <th>Audit Evidence</th>
+                                                <th>Comments</th>
+                                                <th>Status</th>
+                                                <th>Team Member</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for task in execution.tasks %}
+                                                <tr class="task-status-{{ task.status|replace(' ', '') }}">
+                                                    <td>{{ task.task_name }}</td>
+                                                    <td>{{ task.procedure }}</td>
+                                                    <td>{{ task.audit_evidence }}</td>
+                                                    <td>{{ task.comments }}</td>
+                                                    <td>
+                                                        <span class="badge {% if task.status == 'Completed' %}bg-success
+                                                                       {% elif task.status == 'In Progress' %}bg-warning
+                                                                       {% else %}bg-secondary{% endif %}">
+                                                            {{ task.status }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {% if task.allocated_team_member %}
+                                                            <i class="fas fa-user-circle me-1"></i>
+                                                            {{ task.allocated_team_member }}
+                                                        {% else %}
+                                                            <span class="text-muted">Not assigned</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                <h5>No Audit Data Available</h5>
+                <p class="text-muted mb-0">No audit report data available for this period.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="toastTitle"></strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+<style>
+.accordion-button:not(.collapsed) {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+}
+.task-status-Completed {
+    background-color: rgba(25, 135, 84, 0.05);
+}
+.task-status-InProgress {
+    background-color: rgba(255, 193, 7, 0.05);
+}
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+}
+.table td {
+    vertical-align: middle;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Export to Word
+    document.getElementById('exportWord').addEventListener('click', async function() {
+        try {
+            const button = this;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+
+            const response = await fetch(
+                `/client/{{ client._id }}/export_audit_report?start_date={{ start_date }}&end_date={{ end_date }}`
+            );
+            
+            if (!response.ok) throw new Error('Export failed');
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Audit_Report_{{ client.company_name }}_{{ start_date }}_{{ end_date }}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showToast('Success', 'Report exported successfully!');
+        } catch (error) {
+            console.error('Export error:', error);
+            showToast('Error', 'Failed to export report');
+        } finally {
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-file-word me-2"></i>Export to Word';
+        }
+    });
+
+    // Export to Excel
+    document.getElementById('exportExcel').addEventListener('click', async function() {
+        try {
+            const button = this;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+
+            const response = await fetch(
+                `/client/{{ client._id }}/export_audit_report_excel?start_date={{ start_date }}&end_date={{ end_date }}`
+            );
+            
+            if (!response.ok) throw new Error('Export failed');
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Audit_Report_{{ client.company_name }}_{{ start_date }}_{{ end_date }}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showToast('Success', 'Report exported successfully!');
+        } catch (error) {
+            console.error('Export error:', error);
+            showToast('Error', 'Failed to export report');
+        } finally {
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-file-excel me-2"></i>Export to Excel';
+        }
+    });
+});
+
+function showToast(title, message) {
+    const toast = new bootstrap.Toast(document.getElementById('notificationToast'));
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastMessage').textContent = message;
+    toast.show();
+}
+</script>
+{% endblock %}
+```

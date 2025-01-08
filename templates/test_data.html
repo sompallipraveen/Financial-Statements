@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Data</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Audit Scope Data for Manufacturing Industry</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Scope Area</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for scope in scope_areas %}
+            <tr>
+                <td>{{ scope.name }}</td>
+                <td>{{ scope.details }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

@@ -1,0 +1,240 @@
+
+{% extends "client_page.html" %}
+
+{% block title %}Created Audit Plan{% endblock %}
+
+{% block content %}
+<style>
+    .audit-period-card {
+        background: linear-gradient(45deg, #2196F3, #1976D2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+    }
+    .audit-period-card .card-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .status-badge {
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    .table-header {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    .export-btn {
+        transition: transform 0.2s;
+    }
+    .export-btn:hover {
+        transform: translateY(-2px);
+    }
+    .procedure-list {
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    .procedure-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    .procedure-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .procedure-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+</style>
+
+<div class="container-fluid px-4 py-4">
+    {% if not start_date or not end_date %}
+        <div class="alert alert-warning">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>No Audit Period Selected</h5>
+            <p>Please <a href="{{ url_for('select_period', client_id=client._id) }}" class="alert-link">select an audit period</a> to view the audit plan.</p>
+        </div>
+    {% else %}
+        <!-- Audit Period Information -->
+        <div class="card audit-period-card mb-4">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h4 class="mb-0">Audit Plan: {{ client.company_name }}</h4>
+                        <p class="mb-0 opacity-75">Period: {{ start_date }} to {{ end_date }}</p>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group">
+                            <button class="btn btn-light export-btn" id="exportWord">
+                                <i class="fas fa-file-word me-2"></i>Export to Word
+                            </button>
+                            <button class="btn btn-light export-btn" id="exportExcel">
+                                <i class="fas fa-file-excel me-2"></i>Export to Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="{{ url_for('audit_planning', client_id=client._id, start_date=start_date, end_date=end_date) }}" 
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Planning
+                    </a>
+                    <a href="{{ url_for('audit_execution', client_id=client._id, start_date=start_date, end_date=end_date) }}" 
+                       class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Proceed to Execution
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Scope Table -->
+        <div class="card shadow">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Audit Scope and Procedures</h5>
+            </div>
+            <div class="card-body">
+                {% if audit_scope %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="auditScopeTable">
+                            <thead class="table-header">
+                                <tr>
+                                    <th>Scope Area</th>
+                                    <th>Details</th>
+                                    <th>Detailed Procedures</th>
+                                    <th>Status</th>
+                                    <th>Allocated To</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for scope in audit_scope %}
+                                <tr>
+                                    <td class="fw-medium">{{ scope.name }}</td>
+                                    <td>{{ scope.details }}</td>
+                                    <td>
+                                        <div class="procedure-list">
+                                            {% if scope.detailed_procedure %}
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for procedure in scope.detailed_procedure %}
+                                                        <li class="mb-2">
+                                                            <i class="fas fa-check-circle text-success me-2"></i>
+                                                            {{ procedure|trim }}
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <p class="text-muted mb-0">No procedures defined</p>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge badge {% if scope.status == 'Completed' %}bg-success
+                                                                      {% elif scope.status == 'In Progress' %}bg-warning text-dark
+                                                                      {% else %}bg-secondary{% endif %}">
+                                            <i class="fas {% if scope.status == 'Completed' %}fa-check-circle
+                                                        {% elif scope.status == 'In Progress' %}fa-clock
+                                                        {% else %}fa-hourglass-start{% endif %} me-1"></i>
+                                            {{ scope.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if scope.allocation_team_member %}
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-circle me-2"></i>
+                                                {{ scope.allocation_team_member }}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">Not assigned</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h5>No Audit Scope Available</h5>
+                        <p class="text-muted">No audit scope has been defined for this period.</p>
+                        <a href="{{ url_for('audit_planning', client_id=client._id, start_date=start_date, end_date=end_date) }}" 
+                           class="btn btn-primary">
+                            Go to Audit Planning
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="position-fixed top-50 start-50 translate-middle" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    
+    // Export to Word
+    document.getElementById('exportWord')?.addEventListener('click', async function() {
+        try {
+            loadingSpinner.style.display = 'block';
+            const response = await fetch(`/client/{{ client._id|string }}/export_audit_report?start_date={{ start_date }}&end_date={{ end_date }}`);
+            
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AuditReport_{{ client.company_name }}_{{ start_date }}_{{ end_date }}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Export error:', error);
+            alert('Failed to export report. Please try again.');
+        } finally {
+            loadingSpinner.style.display = 'none';
+        }
+    });
+
+    // Export to Excel
+    document.getElementById('exportExcel')?.addEventListener('click', async function() {
+        try {
+            loadingSpinner.style.display = 'block';
+            const response = await fetch(`/client/{{ client._id|string }}/export_audit_report_excel?start_date={{ start_date }}&end_date={{ end_date }}`);
+            
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AuditReport_{{ client.company_name }}_{{ start_date }}_{{ end_date }}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Export error:', error);
+            alert('Failed to export report. Please try again.');
+        } finally {
+            loadingSpinner.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
+```

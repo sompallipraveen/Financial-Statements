@@ -1,0 +1,611 @@
+{% extends "client_page.html" %}
+
+{% block title %}Company Information{% endblock %}
+
+{% block additional_styles %}
+<style>
+    /* Core Styles */
+    .section-fade-in {
+        animation: fadeIn 0.6s ease-in-out;
+    }
+
+    .card {
+        transition: all 0.3s ease;
+        border: none;
+        margin-bottom: 2rem;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    .card-header {
+        border: none;
+        padding: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-header h5 {
+        margin: 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .table-borderless td {
+        padding: 0.8rem;
+        vertical-align: middle;
+    }
+
+    .table-borderless tr:hover {
+        background-color: rgba(0,0,0,0.02);
+        transition: background-color 0.3s ease;
+    }
+
+    /* Export Button */
+    .export-btn {
+        background: linear-gradient(45deg, #2563eb, #4f46e5);
+        border: none;
+        padding: 0.8rem 1.5rem;
+        color: white;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);
+    }
+
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(37, 99, 235, 0.2);
+        color: white;
+    }
+
+    /* Section Header */
+    .section-header {
+        background: linear-gradient(45deg, #2563eb, #4f46e5);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Progress Bar */
+    .progress-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        z-index: 9999;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #2563eb, #4f46e5);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    /* Field Styling */
+    .field-label {
+        font-weight: 600;
+        color: #4b5563;
+        min-width: 200px;
+    }
+
+    .field-value {
+        color: #1f2937;
+    }
+
+    /* Badge Styling */
+    .section-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Progress Bar -->
+<div class="progress-wrapper">
+    <div class="progress-bar" id="scrollProgress"></div>
+</div>
+
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="section-header">
+        <h2 class="mb-2">Company Information</h2>
+        <h4 class="mb-0 text-white-50">{{ client.company_name }}</h4>
+    </div>
+
+    <!-- Export Button -->
+    <div class="text-right mb-4">
+        <a href="{{ url_for('export_company_info', client_id=client._id) }}" class="export-btn">
+            <i class="fas fa-file-word"></i>
+            Export to Word
+        </a>
+    </div>
+
+    <!-- Basic Information -->
+    <div class="card shadow-sm section-fade-in">
+        <div class="card-header bg-primary text-white">
+            <h5><i class="fas fa-building mr-2"></i>Basic Information</h5>
+            <span class="section-badge">Core Details</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="field-label">Company Name:</td>
+                    <td class="field-value">{{ client.company_name }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Business Registration Number:</td>
+                    <td class="field-value">{{ client.business_registration_number }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">GSTIN:</td>
+                    <td class="field-value">{{ client.gstin }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">PAN/TAN:</td>
+                    <td class="field-value">{{ client.pan_tan }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Registered Address:</td>
+                    <td class="field-value">{{ client.registered_address }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Operating Address(es):</td>
+                    <td class="field-value">{{ client.operating_addresses }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Key Management Personnel:</td>
+                    <td class="field-value">{{ client.key_management_personnel }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Date of Incorporation:</td>
+                    <td class="field-value">{{ client.date_of_incorporation }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Authorized Signatories:</td>
+                    <td class="field-value">{{ client.authorized_signatories }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Bank Account Details:</td>
+                    <td class="field-value">{{ client.bank_account_details }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Industry and Business Model -->
+    <div class="card shadow-sm section-fade-in">
+        <div class="card-header bg-info text-white">
+            <h5><i class="fas fa-industry mr-2"></i>Industry and Business Model</h5>
+            <span class="section-badge">Business Profile</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="field-label">Industry Type:</td>
+                    <td class="field-value">{{ client.industry_type }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Other Industry Type:</td>
+                    <td class="field-value">{{ client.other_industry_type }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Nature of Products/Services:</td>
+                    <td class="field-value">{{ client.nature_of_products }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Key Raw Materials:</td>
+                    <td class="field-value">{{ client.key_raw_materials }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Key Markets/Customers:</td>
+                    <td class="field-value">{{ client.key_markets }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Major Competitors:</td>
+                    <td class="field-value">{{ client.major_competitors }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Manufacturing Processes:</td>
+                    <td class="field-value">{{ client.manufacturing_processes }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Key Technology:</td>
+                    <td class="field-value">{{ client.key_technology }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Capacity Utilization:</td>
+                    <td class="field-value">{{ client.capacity_utilization }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Regulatory Requirements:</td>
+                    <td class="field-value">{{ client.regulatory_requirements }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Products and Services -->
+    <div class="card shadow-sm section-fade-in">
+        <div class="card-header bg-success text-white">
+            <h5><i class="fas fa-box-open mr-2"></i>Products and Services</h5>
+            <span class="section-badge">Offerings</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="field-label">Product Categories:</td>
+                    <td class="field-value">{{ client.product_categories }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Top-Selling Products:</td>
+                    <td class="field-value">{{ client.top_selling_products }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Production Capacity:</td>
+                    <td class="field-value">{{ client.production_capacity }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Lead Time:</td>
+                    <td class="field-value">{{ client.lead_time }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Product Differentiation:</td>
+                    <td class="field-value">{{ client.product_differentiation }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Product Lifecycle:</td>
+                    <td class="field-value">{{ client.product_lifecycle }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Pricing Model:</td>
+                    <td class="field-value">{{ client.pricing_model }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">After-Sales Services:</td>
+                    <td class="field-value">{{ client.after_sales_services }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Ownership and Governance -->
+    <div class="card shadow-sm section-fade-in">
+        <div class="card-header bg-secondary text-white">
+            <h5><i class="fas fa-sitemap mr-2"></i>Ownership and Governance</h5>
+            <span class="section-badge">Structure</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="field-label">Ownership Structure Details:</td>
+                    <td class="field-value">{{ client.ownership_structure_details }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Board of Directors:</td>
+                    <td class="field-value">{{ client.board_of_directors }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Corporate Governance:</td>
+                    <td class="field-value">{{ client.corporate_governance }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Legal Advisors/Auditors:</td>
+                    <td class="field-value">{{ client.legal_advisors_auditors }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Key Policies:</td>
+                    <td class="field-value">{{ client.key_policies }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Financial Overview -->
+    <div class="card shadow-sm section-fade-in">
+        <div class="card-header bg-warning text-dark">
+            <h5><i class="fas fa-chart-line mr-2"></i>Financial Overview</h5>
+            <span class="section-badge">Financials</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="field-label">Revenue Streams:</td>
+                    <td class="field-value">{{ client.revenue_streams }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Cost Structure:</td>
+                    <td class="field-value">{{ client.cost_structure }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Profit Margins:</td>
+                    <td class="field-value">{{ client.profit_margins }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Capital Structure:</td>
+                    <td class="field-value">{{ client.capital_structure }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Financial Ratios:</td>
+                    <td class="field-value">{{ client.financial_ratios }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Tax Compliance:</td>
+                    <td class="field-value">{{ client.tax_compliance }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Human Resources -->
+    <div class="card shadow-sm section-fade-in">
+        <div class="card-header bg-danger text-white">
+            <h5><i class="fas fa-users mr-2"></i>Human Resources</h5>
+            <span class="section-badge">Personnel</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="field-label">Employee Count:</td>
+                    <td class="field-value">{{ client.employee_count }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Employee Turnover Rate:</td>
+                    <td class="field-value">{{ client.employee_turnover_rate }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Compensation and Benefits:</td>
+                    <td class="field-value">{{ client.compensation_benefits }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Training Programs:</td>
+                    <td class="field-value">{{ client.training_programs }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Performance Management:</td>
+                    <td class="field-value">{{ client.performance_management }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Workforce Diversity:</td>
+                    <td class="field-value">{{ client.workforce_diversity }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Labor Union:</td>
+                    <td class="field-value">{{ client.labor_union }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- IT Systems and Infrastructure -->
+    <div class="card shadow-sm section-fade-in">
+        <div class="card-header bg-purple text-blue">
+            <h5><i class="fas fa-laptop-code mr-2"></i>IT Systems and Infrastructure</h5>
+            <span class="section-badge">Technology</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="field-label">ERP/Manufacturing Software:</td>
+                    <td class="field-value">{{ client.erp_software }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Data Security Measures:</td>
+                    <td class="field-value">{{ client.data_security_measures }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Backup and Disaster Recovery:</td>
+                    <td class="field-value">{{ client.backup_disaster_recovery }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">System Integrations:</td>
+                    <td class="field-value">{{ client.system_integrations }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">User Access Control:</td>
+                    <td class="field-value">{{ client.user_access_control }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Risk Management and Compliance -->
+    <div class="card shadow-sm section-fade-in">
+        <div class="card-header bg-danger text-white">
+            <h5><i class="fas fa-shield-alt mr-2"></i>Risk Management and Compliance</h5>
+            <span class="section-badge">Risk & Compliance</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="field-label">Key Risks Identified:</td>
+                    <td class="field-value">{{ client.key_risks }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Regulatory Compliance:</td>
+                    <td class="field-value">{{ client.regulatory_compliance }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Insurance Policies:</td>
+                    <td class="field-value">{{ client.insurance_policies }}</td>
+                </tr>
+                <tr>
+                    <td class="field-label">Internal Controls:</td>
+                    <td class="field-value">{{ client.internal_controls }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Progress bar
+    window.onscroll = function() {
+        let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        let scrolled = (winScroll / height) * 100;
+        document.getElementById('scrollProgress').style.width = scrolled + '%';
+    };
+
+    // Intersection Observer for fade-in animation
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        },
+        { threshold: 0.1 }
+    );
+
+    // Apply observer to all sections
+    document.querySelectorAll('.section-fade-in').forEach(section => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        section.style.transition = 'all 0.6s ease-out';
+        observer.observe(section);
+    });
+
+    // Export button hover effect
+    const exportBtn = document.querySelector('.export-btn');
+    if(exportBtn) {
+        exportBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        exportBtn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    }
+
+    // Add hover effect to table rows
+    const tableRows = document.querySelectorAll('.table tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(37, 99, 235, 0.05)';
+            this.style.transition = 'background-color 0.3s ease';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+
+    // Toast notification for successful export
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Handle export button click
+    exportBtn.addEventListener('click', function(e) {
+        showToast('Document export started...');
+    });
+});
+</script>
+
+<style>
+/* Toast Notification Style */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    animation: slideIn 0.3s ease-out;
+    z-index: 1000;
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toast-content i {
+    color: #10B981;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Additional responsive styles */
+@media (max-width: 768px) {
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .section-badge {
+        margin-top: 0.5rem;
+    }
+
+    .field-label {
+        min-width: 150px;
+    }
+
+    .export-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Print styles */
+@media print {
+    .export-btn,
+    .progress-wrapper {
+        display: none;
+    }
+
+    .card {
+        break-inside: avoid;
+        box-shadow: none !important;
+    }
+
+    .card-header {
+        background: #f8f9fa !important;
+        color: black !important;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Visitor Analytics</h1>
+    
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-2">Total Visitors</h3>
+            <p class="text-3xl">{{ total_visitors }}</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-2">Unique Visitors</h3>
+            <p class="text-3xl">{{ unique_visitors }}</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-2">Device Distribution</h3>
+            <div class="space-y-2">
+                <p>Desktop: {{ device_stats.desktop }}</p>
+                <p>Mobile: {{ device_stats.mobile }}</p>
+                <p>Tablet: {{ device_stats.tablet }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Visitors -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-bold mb-4">Recent Visitors</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">Time</th>
+                        <th class="px-4 py-2">Browser</th>
+                        <th class="px-4 py-2">OS</th>
+                        <th class="px-4 py-2">Device</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visitor in recent_visitors %}
+                    <tr>
+                        <td class="border px-4 py-2">{{ visitor.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td class="border px-4 py-2">{{ visitor.browser }}</td>
+                        <td class="border px-4 py-2">{{ visitor.os }}</td>
+                        <td class="border px-4 py-2">{{ visitor.device }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Audit IQ AI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --bg-color: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+        }
+
+        .brand-section {
+            flex: 1;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            position: relative;
+        }
+
+        .brand-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("{{ url_for('static', filename='My_Firm_Logo.png') }}") center center/contain no-repeat;
+            opacity: 0.1;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .brand-logo {
+            width: 200px;
+            height: auto;
+            margin-bottom: 2rem;
+        }
+
+        .form-section {
+            flex: 1;
+            padding: 3rem;
+            background: white;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .validation-feedback {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .is-valid {
+            border-color: var(--success-color);
+        }
+
+        .is-invalid {
+            border-color: var(--error-color);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-register:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: var(--success-color);
+            border: 1px solid #bbf7d0;
+        }
+
+        @media (max-width: 768px) {
+            .register-container {
+                flex-direction: column;
+            }
+
+            .brand-section {
+                padding: 2rem;
+            }
+
+            .form-section {
+                padding: 2rem;
+            }
+        }
+    </style>
+            <style>
+                /* Add these styles to your existing CSS */
+                .error-popup, .success-popup {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                }
+                
+                .popup-content {
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 0.5rem;
+                    text-align: center;
+                    max-width: 400px;
+                    width: 90%;
+                }
+                
+                .error-popup i {
+                    color: var(--error-color);
+                    font-size: 2rem;
+                    margin-bottom: 1rem;
+                }
+                
+                .success-popup i {
+                    color: var(--success-color);
+                    font-size: 2rem;
+                    margin-bottom: 1rem;
+                }
+                
+                .popup-content button {
+                    margin-top: 1rem;
+                    padding: 0.5rem 2rem;
+                    border: none;
+                    border-radius: 0.25rem;
+                    background: var(--primary-color);
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                
+                .popup-content button:hover {
+                    background: var(--secondary-color);
+                }
+                
+                .valid-feedback {
+                    color: var(--success-color);
+                }
+                
+                .invalid-feedback {
+                    color: var(--error-color);
+                }
+                </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="brand-section">
+            <div class="brand-content">
+                <img src="{{ url_for('static', filename='My_Firm_Logo.png') }}" alt="Audit IQ AI Logo" class="brand-logo">
+                <h2>Welcome to Audit IQ AI</h2>
+                <p>Create your account to get started</p>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="form-header">
+                <h1>Create Account</h1>
+                <p>Please fill in your information to register</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }} mr-2"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form id="registerForm" action="{{ url_for('register') }}" method="POST">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" class="form-control" id="username" name="username" required 
+                               minlength="3" placeholder="Choose a username">
+                    </div>
+                    <div class="validation-feedback"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" class="form-control" id="email" name="email" required 
+                               placeholder="Enter your email">
+                    </div>
+                    <div class="validation-feedback"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="mobile">Mobile Number</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" class="form-control" id="mobile" name="mobile" required 
+                               pattern="[0-9]{10}" placeholder="Enter your 10-digit mobile number">
+                    </div>
+                    <div class="validation-feedback"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" class="form-control" id="password" name="password" required 
+                               minlength="8" placeholder="Create a password">
+                    </div>
+                    <div class="validation-feedback"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user-shield"></i>
+                        <select class="form-control" id="role" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="auditor">Auditor</option>
+                            <option value="admin">Admin</option>
+                            <option value="reviewer">Reviewer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-register">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+
+                <div class="login-link">
+                    <a href="{{ url_for('login') }}">
+                        <i class="fas fa-arrow-left"></i>
+                        Already have an account? Login
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registerForm');
+            const createAccountBtn = document.querySelector('.btn-register');
+        
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault(); // Prevent default form submission
+                console.log('Form submitted'); // Debug log
+        
+                // Get form values
+                const formData = {
+                    username: document.getElementById('username').value,
+                    email: document.getElementById('email').value,
+                    mobile: document.getElementById('mobile').value,
+                    password: document.getElementById('password').value,
+                    role: document.getElementById('role').value
+                };
+                console.log('Form Values:', {
+                    username: document.getElementById('username').value,
+                    email: document.getElementById('email').value,
+                    mobile: document.getElementById('mobile').value,
+                    password: document.getElementById('password').value,
+                    role: document.getElementById('role').value
+                });
+        
+                // Basic validation
+                if (!formData.username || !formData.email || !formData.mobile || !formData.password || !formData.role) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+        
+                try {
+                    // Show loading state
+                    createAccountBtn.disabled = true;
+                    createAccountBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+        
+                    // Send request to server
+                    const response = await fetch('/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(formData)
+                    });
+        
+                    const data = await response.json();
+        
+                    if (response.ok) {
+                        alert('Registration successful! Please login.');
+                        window.location.href = '/login';
+                    } else {
+                        alert(data.message || 'Registration failed. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    alert('An error occurred during registration. Please try again.');
+                } finally {
+                    // Reset button state
+                    createAccountBtn.disabled = false;
+                    createAccountBtn.innerHTML = 'Create Account';
+                }
+                
+            });
+        });
+        </script>
+</body>
+</html>

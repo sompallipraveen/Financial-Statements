@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Add Audit</h2>
+<form method="POST" action="{{ url_for('add_audit') }}">
+    <label for="audit_name">Audit Name:</label>
+    <input type="text" name="audit_name" required>
+    
+    <label for="audit_details">Audit Details:</label>
+    <textarea name="audit_details" required></textarea>
+    
+    <button type="submit">Add Audit</button>
+</form>
+
+<style>
+    h2 {
+        text-align: center;
+        color: #333;
+    }
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+    label {
+        margin-top: 10px;
+    }
+    input, textarea, button {
+        padding: 10px;
+        margin-top: 5px;
+        font-size: 16px;
+    }
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    button {
+        background-color: #333;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+    button:hover {
+        background-color: #555;
+    }
+</style>
+{% endblock %}

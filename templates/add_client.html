@@ -1,0 +1,836 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Client{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        color: #2563eb;
+        border-left: 4px solid #2563eb;
+        padding-left: 1rem;
+        margin: 2rem 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        background: #f8fafc;
+        padding: 0.75rem;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+    }
+
+    .form-text {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Custom select styling */
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,...");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem;
+    }
+
+    /* Button styling */
+    .btn-submit {
+        background: linear-gradient(45deg, #2563eb, #4f46e5);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        margin-top: 2rem;
+        width: auto;
+        min-width: 200px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37,99,235,0.2);
+    }
+
+    /* Form sections */
+    .form-section {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
+
+    .form-section:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Required field indicator */
+    .required-field::after {
+        content: '*';
+        color: #ef4444;
+        margin-left: 4px;
+    }
+
+    /* Form grid for better layout */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    /* Progress indicator */
+    .progress-container {
+        margin: 2rem 0;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+
+    .progress {
+        height: 0.5rem;
+        border-radius: 999px;
+        background: #e2e8f0;
+    }
+
+    .progress-bar {
+        background: linear-gradient(45deg, #2563eb, #4f46e5);
+        border-radius: 999px;
+        transition: width 0.3s ease;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Animation classes */
+    .fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Toast notification */
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: none;
+        z-index: 1000;
+    }
+
+    .toast.show {
+        display: block;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+        }
+        to {
+            transform: translateX(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container fade-in">
+        <h2 class="mb-4">
+            <i class="fas fa-plus-circle mr-2"></i>Add New Client
+        </h2>
+
+        <!-- Progress indicator -->
+        <div class="progress-container">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <form id="clientForm" action="{{ url_for('add_client') }}" method="POST">
+            <!-- Basic Information Section -->
+<!-- Basic Information Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-building mr-2"></i>Basic Information
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label class="required-field" for="company_name">Company Name</label>
+            <input type="text" class="form-control" id="company_name" name="company_name" required placeholder="e.g., ABC Pvt Ltd">
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Registration Certificate, GST Certificate
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="business_registration_number">Business Registration Number</label>
+            <input type="text" class="form-control" id="business_registration_number" name="business_registration_number" required placeholder="e.g., CIN123456">
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Certificate of Incorporation
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="gstin">GST Identification Number (GSTIN)</label>
+            <input type="text" class="form-control" id="gstin" name="gstin" required placeholder="e.g., 27AAECS1234L1Z2">
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>GST Certificate
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="pan_tan">PAN/TAN</label>
+            <input type="text" class="form-control" id="pan_tan" name="pan_tan" required placeholder="e.g., ABCDE1234F">
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>PAN Card, TAN Allotment Letter
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Address Information Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-map-marker-alt mr-2"></i>Address Information
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label class="required-field" for="registered_address">Registered Address</label>
+            <textarea class="form-control" id="registered_address" name="registered_address" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Utility bills, Lease agreement
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="operating_addresses">Operating Address(es)</label>
+            <textarea class="form-control" id="operating_addresses" name="operating_addresses" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Address proof, Factory License
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Management and Ownership Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-users mr-2"></i>Management and Ownership
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label class="required-field" for="key_management_personnel">Key Management Personnel (KMP)</label>
+            <textarea class="form-control" id="key_management_personnel" name="key_management_personnel" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Director Identification Number (DIN)
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="date_of_incorporation">Date of Incorporation</label>
+            <input type="date" class="form-control" id="date_of_incorporation" name="date_of_incorporation" required>
+            <small class="form-text text-muted">
+                <i class="fas fa-calendar mr-1"></i>Incorporation Documents
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="authorized_signatories">Authorized Signatories</label>
+            <textarea class="form-control" id="authorized_signatories" name="authorized_signatories" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Board Resolution
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Banking Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-university mr-2"></i>Banking Information
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label class="required-field" for="bank_account_details">Bank Account Details</label>
+            <textarea class="form-control" id="bank_account_details" name="bank_account_details" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Bank Statement, Cancelled Cheque
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Industry and Business Model Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-industry mr-2"></i>Industry Information
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="industry_type" class="required-field">Industry Type</label>
+            <select class="form-control" id="industry_type" name="industry_type" required>
+                <option value="">Select Industry Type</option>
+                <option value="Automotive">Automotive</option>
+                <option value="Agriculture and Food Processing">Agriculture and Food Processing</option>
+                <option value="Aviation">Aviation</option>
+                <option value="Chemicals and Petrochemicals">Chemicals and Petrochemicals</option>
+                <option value="Education">Education</option>
+                <option value="Government and Public Sector">Government and Public Sector</option>
+                <option value="Hospitality and Tourism">Hospitality and Tourism</option>
+                <option value="Logistics and Transportation">Logistics and Transportation</option>
+                <option value="Media and Entertainment">Media and Entertainment</option>
+                <option value="Mining and Metal Industry">Mining and Metal Industry</option>
+                <option value="Non-Profit Organizations (NGOs)">Non-Profit Organizations (NGOs)</option>
+                <option value="Professional Services">Professional Services</option>
+                <option value="Telecommunications">Telecommunications</option>
+                <option value="Textile and Apparel">Textile and Apparel</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Retail and Consumer Goods">Retail and Consumer Goods</option>
+                <option value="Financial Services">Financial Services</option>
+                <option value="Healthcare and Pharmaceuticals">Healthcare and Pharmaceuticals</option>
+                <option value="Information Technology and Software Development">Information Technology and Software Development</option>
+                <option value="Construction and Real Estate">Construction and Real Estate</option>
+                <option value="Energy and Utilities">Energy and Utilities</option>
+                <option value="FMCG">FMCG</option>
+                <option value="Textile">Textile and Apparel</option>
+                <option value="Textile">Statutory Audit</option>
+                <option value="Textile">Healthcare Industry</option>
+                <option value="Textile">Shrimp Feed Industry</option>
+                <option value="Textile">Shrimp Process Industry</option>
+                <option value="Textile">Shrimp Exports Industry</option>
+                <option value="Other">Other</option>
+            </select>
+            <small class="form-text text-muted">
+                <i class="fas fa-info-circle mr-1"></i>Industry Code, Industry Classification (NIC Code)
+            </small>
+        </div>
+        
+        <!-- This field appears when "Other" is selected -->
+        <div class="form-group" id="otherIndustryGroup" style="display: none;">
+            <label for="other_industry_type">If Other, Specify</label>
+            <input type="text" class="form-control" id="other_industry_type" name="other_industry_type" placeholder="Specify Industry Type if Other selected">
+            <small class="form-text text-muted">
+                <i class="fas fa-info-circle mr-1"></i>Please specify your industry type
+            </small>
+        </div>
+    </div>
+</div>
+<!-- Products and Services Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-box-open mr-2"></i>Products and Services
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label class="required-field" for="nature_of_products">Nature of Products/Services</label>
+            <textarea class="form-control" id="nature_of_products" name="nature_of_products" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Product Catalogs, Brochures
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="key_raw_materials">Key Raw Materials</label>
+            <textarea class="form-control" id="key_raw_materials" name="key_raw_materials" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Procurement Contracts
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="key_markets">Key Markets/Customers</label>
+            <textarea class="form-control" id="key_markets" name="key_markets" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Sales Invoices
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="major_competitors">Major Competitors</label>
+            <textarea class="form-control" id="major_competitors" name="major_competitors" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Market Analysis
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="manufacturing_processes">Manufacturing Processes</label>
+            <textarea class="form-control" id="manufacturing_processes" name="manufacturing_processes" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Process Flowcharts
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="key_technology">Key Technology Used</label>
+            <textarea class="form-control" id="key_technology" name="key_technology" rows="2" required></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Technology Licenses
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="capacity_utilization">Capacity Utilization</label>
+            <input type="text" class="form-control" id="capacity_utilization" name="capacity_utilization" required placeholder="e.g., 75%">
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Production Reports
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="product_categories">Product Categories</label>
+            <textarea class="form-control" id="product_categories" name="product_categories" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Product Lists
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label class="required-field" for="top_selling_products">Top-Selling Products</label>
+            <textarea class="form-control" id="top_selling_products" name="top_selling_products" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Sales Data
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="production_capacity">Production Capacity</label>
+            <input type="text" class="form-control" id="production_capacity" name="production_capacity" placeholder="e.g., 1000 units/month">
+            <small class="form-text text-muted">
+                <i class="fas fa-industry mr-1"></i>Production Capacity Details
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="lead_time">Lead Time</label>
+            <input type="text" class="form-control" id="lead_time" name="lead_time" placeholder="e.g., 2 weeks">
+            <small class="form-text text-muted">
+                <i class="fas fa-clock mr-1"></i>Processing Time
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="product_differentiation">Product Differentiation</label>
+            <textarea class="form-control" id="product_differentiation" name="product_differentiation" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-star mr-1"></i>Unique Product Features and Market Position
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="product_lifecycle">Product Lifecycle</label>
+            <textarea class="form-control" id="product_lifecycle" name="product_lifecycle" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-retweet mr-1"></i>Product Development and Lifecycle Stages
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="pricing_model">Pricing Model</label>
+            <textarea class="form-control" id="pricing_model" name="pricing_model" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-tags mr-1"></i>Pricing Strategy and Models
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="after_sales_services">After Sales Services</label>
+            <textarea class="form-control" id="after_sales_services" name="after_sales_services" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-handshake mr-1"></i>Post-Sale Support and Services
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Ownership and Governance Structure Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-sitemap mr-2"></i>Ownership and Governance
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="ownership_structure">Ownership Structure</label>
+            <textarea class="form-control" id="ownership_structure" name="ownership_structure" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Share Certificates
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="board_of_directors">Board of Directors</label>
+            <textarea class="form-control" id="board_of_directors" name="board_of_directors" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-users mr-1"></i>Board Composition
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="corporate_governance">Corporate Governance</label>
+            <textarea class="form-control" id="corporate_governance" name="corporate_governance" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-balance-scale mr-1"></i>Governance Policies
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="legal_advisors_auditors">Legal Advisors/Auditors</label>
+            <textarea class="form-control" id="legal_advisors_auditors" name="legal_advisors_auditors" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-balance-scale mr-1"></i>Legal and Audit Partners
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="key_policies">Key Policies</label>
+            <textarea class="form-control" id="key_policies" name="key_policies" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Company Policies and Guidelines
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Overview Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-chart-line mr-2"></i>Financial Overview
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="revenue_streams">Revenue Streams</label>
+            <textarea class="form-control" id="revenue_streams" name="revenue_streams" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-money-bill-wave mr-1"></i>Income Statements
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="cost_structure">Cost Structure</label>
+            <textarea class="form-control" id="cost_structure" name="cost_structure" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-invoice-dollar mr-1"></i>Cost Reports
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="profit_margins">Profit Margins</label>
+            <textarea class="form-control" id="profit_margins" name="profit_margins" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-percentage mr-1"></i>Margin Analysis
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="financial_ratios">Financial Ratios</label>
+            <textarea class="form-control" id="financial_ratios" name="financial_ratios" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-calculator mr-1"></i>Key Financial Indicators
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="capital_structure">Capital Structure</label>
+            <textarea class="form-control" id="capital_structure" name="capital_structure" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-chart-pie mr-1"></i>Equity and Debt Structure
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="tax_compliance">Tax Compliance</label>
+            <textarea class="form-control" id="tax_compliance" name="tax_compliance" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-invoice-dollar mr-1"></i>Tax Filing and Compliance Details
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Human Resources Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-users mr-2"></i>Human Resources
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="employee_count">Employee Count</label>
+            <input type="text" class="form-control" id="employee_count" name="employee_count" placeholder="e.g., 500 employees">
+            <small class="form-text text-muted">
+                <i class="fas fa-user-friends mr-1"></i>Total Workforce
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="compensation_benefits">Compensation and Benefits</label>
+            <textarea class="form-control" id="compensation_benefits" name="compensation_benefits" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-hand-holding-usd mr-1"></i>Payroll Details
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="training_programs">Training Programs</label>
+            <textarea class="form-control" id="training_programs" name="training_programs" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-graduation-cap mr-1"></i>Employee Development
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="performance_management">Performance Management</label>
+            <textarea class="form-control" id="performance_management" name="performance_management" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-chart-line mr-1"></i>Employee Performance Systems
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="workforce_diversity">Workforce Diversity</label>
+            <textarea class="form-control" id="workforce_diversity" name="workforce_diversity" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-users mr-1"></i>Employee Demographics and Diversity
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="labor_union">Labor Union</label>
+            <textarea class="form-control" id="labor_union" name="labor_union" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-hands-helping mr-1"></i>Union Details and Relationships
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- IT Systems Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-laptop-code mr-2"></i>IT Systems and Infrastructure
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="erp_software">ERP/Manufacturing Software</label>
+            <textarea class="form-control" id="erp_software" name="erp_software" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-desktop mr-1"></i>Software Systems
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="data_security_measures">Data Security Measures</label>
+            <textarea class="form-control" id="data_security_measures" name="data_security_measures" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-shield-alt mr-1"></i>Security Protocols
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="backup_disaster_recovery">Backup/Disaster Recovery</label>
+            <textarea class="form-control" id="backup_disaster_recovery" name="backup_disaster_recovery" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-database mr-1"></i>Data Backup and Recovery Plans
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="system_integrations">System Integrations</label>
+            <textarea class="form-control" id="system_integrations" name="system_integrations" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-network-wired mr-1"></i>Integrated Systems and Software
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="user_access_control">User Access Control</label>
+            <textarea class="form-control" id="user_access_control" name="user_access_control" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-lock mr-1"></i>Access Management and Security
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Management Section -->
+<div class="form-section">
+    <h4 class="section-title">
+        <i class="fas fa-exclamation-triangle mr-2"></i>Risk Management
+    </h4>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="key_risks">Key Risks Identified</label>
+            <textarea class="form-control" id="key_risks" name="key_risks" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-file-alt mr-1"></i>Risk Assessment Reports
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="internal_controls">Internal Controls</label>
+            <textarea class="form-control" id="internal_controls" name="internal_controls" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-tasks mr-1"></i>Control Measures
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="regulatory_compliance">Regulatory Compliance</label>
+            <textarea class="form-control" id="regulatory_compliance" name="regulatory_compliance" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-clipboard-check mr-1"></i>Compliance Requirements and Status
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="insurance_policies">Insurance Policies</label>
+            <textarea class="form-control" id="insurance_policies" name="insurance_policies" rows="2"></textarea>
+            <small class="form-text text-muted">
+                <i class="fas fa-shield-alt mr-1"></i>Insurance Coverage Details
+            </small>
+        </div>
+    </div>
+</div>
+
+            <!-- Continue with your existing sections, wrapped in form-section divs -->
+            <!-- Add the rest of your form sections here -->
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-submit">
+                    <i class="fas fa-save mr-2"></i>Add Client
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="saveToast">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle text-success mr-2"></i>
+            <span>Client added successfully!</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('clientForm');
+    const progressBar = document.querySelector('.progress-bar');
+    const toast = document.getElementById('saveToast');
+
+    // Form progress tracking
+    const formGroups = form.querySelectorAll('.form-group');
+    const totalFields = formGroups.length;
+    let completedFields = 0;
+
+    formGroups.forEach(group => {
+        const input = group.querySelector('input, textarea, select');
+        input.addEventListener('change', function() {
+            completedFields = Array.from(formGroups).filter(group => {
+                const input = group.querySelector('input, textarea, select');
+                return input.value.trim() !== '';
+            }).length;
+
+            const progress = (completedFields / totalFields) * 100;
+            progressBar.style.width = `${progress}%`;
+        });
+    });
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Add loading state to submit button
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+
+        // Simulate form submission (replace with actual form submission)
+        setTimeout(() => {
+            toast.classList.add('show');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Client Added';
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                form.submit(); // Actually submit the form
+            }, 2000);
+        }, 1000);
+    });
+
+    // Add animation to sections on scroll
+    const sections = document.querySelectorAll('.form-section');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    sections.forEach(section => observer.observe(section));
+});
+
+document.getElementById('industry_type').addEventListener('change', function() {
+    const otherGroup = document.getElementById('otherIndustryGroup');
+    if (this.value === 'Other') {
+        otherGroup.style.display = 'block';
+    } else {
+        otherGroup.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,665 @@
+{% extends "client_page.html" %}
+
+{% block title %}Audit Planning{% endblock %}
+
+{% block content %}
+<style>
+    .view-procedures {
+        white-space: nowrap;
+    }
+    
+    #dynamic-scope-table {
+        margin-bottom: 1rem;
+    }
+    
+    #dynamic-scope-table td {
+        vertical-align: middle;
+    }
+    
+    .scope-selector {
+        width: 20px;
+        height: 20px;
+    }
+    /* Add to your existing styles */
+#toggleDynamicScope {
+    transition: all 0.3s ease;
+    width: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#toggleDynamicScope:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.collapse {
+    transition: all 0.3s ease;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+/* Animation for collapse */
+.collapse:not(.show) {
+    display: none;
+}
+
+.collapsing {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.35s ease;
+}
+
+/* Add some spacing */
+#dynamicScopeCard {
+    margin-bottom: 20px;
+}
+    </style>
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Audit Planning for {{ client.company_name }}</h2>
+    
+    <!-- Period Information Display -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <h5>Audit Period: {{ start_date }} to {{ end_date }}</h5>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-success" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#dynamicScopeCard" aria-expanded="false" 
+                aria-controls="dynamicScopeCard" id="toggleDynamicScope">
+            <i class="fas fa-chevron-down"></i> <span>Show Available Audit Scopes</span>
+        </button>
+    </div>
+
+
+<!-- Dynamic Audit Scope Selection with Search -->
+<div class="collapse" id="dynamicScopeCard">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Available Audit Scopes</h5>
+                <div class="d-flex gap-2">
+                    <!-- Search Box -->
+                    <div class="input-group" style="width: 300px;">
+                        <input type="text" class="form-control" id="scopeSearch" 
+                               placeholder="Search scopes...">
+                        <button class="btn btn-light" type="button" id="clearSearch">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <!-- Status Filter -->
+                    <select class="form-select" id="statusFilter" style="width: 150px;">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="dynamic-scope-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Select</th>
+                            <th>Scope Area</th>
+                            <th>Details</th>
+                            <th>Detailed Procedures</th>
+                            <th>Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dynamic content will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3 d-flex justify-content-between align-items-center">
+                <span id="selectedCount">0 items selected</span>
+                <button class="btn btn-success" id="add-selected-scope">Add Selected Scope</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5>Scope of Audit</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover table-striped align-middle" id="scope-table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Scope Area</th>
+                        <th>Details</th>
+                        <th>Detailed Procedure</th>
+                        <th>Status</th>
+                        <th>Allocated Team Member</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scope in audit_plan.modified_audit_scope %}
+                    <tr>
+                        <td data-info="{{ scope.name }}"><input type="text" class="form-control" value="{{ scope.name }}" data-name="scope-name"></td>
+                        <td data-info="{{ scope.details }}"><input type="text" class="form-control" value="{{ scope.details }}" data-name="scope-details"></td>
+                        <td data-info="{{ scope.detailed_procedure | join(', ') }}"><textarea class="form-control" data-name="scope-procedure">{{ scope.detailed_procedure | join(", ") }}</textarea></td>
+                        <td data-info="{{ scope.status }}"><input type="text" class="form-control" value="{{ scope.status }}" data-name="scope-status"></td>
+                        <td data-info="{{ scope.allocation_team_member }}">
+                            <select class="form-control" data-name="scope-team-member">
+                                <option value="">Select Team Member</option>
+                                {% for member in team_members %}
+                                    <option value="{{ member.username }}" 
+                                            {% if member.username == scope.allocation_team_member %}selected{% endif %}>
+                                        {{ member.username }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td data-info="Delete this row"><button class="btn btn-danger btn-sm delete-scope">Delete</button></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No audit scope data available for this period.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="text-center">
+                <button class="btn btn-primary mt-3" id="add-scope">Add Scope Area</button>
+                <button class="btn btn-warning mt-3" id="save-modified-scope">Save Modified Audit Plan</button>
+                <button class="btn btn-secondary mt-3" id="load-scope">Load Audit Scope</button>
+                <button class="btn btn-info mt-3" id="load-modified-scope">Load Saved Modified Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tooltip {
+        position: absolute;
+        background-color: #333;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 5px;
+        font-size: 12px;
+        max-width: 250px;
+        white-space: pre-wrap;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 10;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const table = document.getElementById('scope-table');
+    const tooltip = document.createElement('div');
+    tooltip.classList.add('tooltip');
+    document.body.appendChild(tooltip);
+
+    // Tooltip functionality
+    table.addEventListener('mouseover', function (e) {
+        const target = e.target.closest('[data-info]');
+        if (target) {
+            tooltip.textContent = target.getAttribute('data-info');
+            tooltip.style.visibility = 'visible';
+            tooltip.style.opacity = '1';
+        }
+    });
+
+    table.addEventListener('mousemove', function (e) {
+        tooltip.style.top = e.pageY + 10 + 'px';
+        tooltip.style.left = e.pageX + 10 + 'px';
+    });
+
+    table.addEventListener('mouseout', function () {
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '0';
+    });
+
+    // Add Scope Row
+    document.getElementById('add-scope').addEventListener('click', function () {
+        const newRow = `
+            <tr>
+                <td data-info="Scope Area"><input type="text" class="form-control" placeholder="Enter Scope Area" data-name="scope-name"></td>
+                <td data-info="Details"><input type="text" class="form-control" placeholder="Enter Details" data-name="scope-details"></td>
+                <td data-info="Detailed Procedure"><textarea class="form-control" placeholder="Enter Detailed Procedure" data-name="scope-procedure"></textarea></td>
+                <td data-info="Status"><input type="text" class="form-control" placeholder="Enter Status" data-name="scope-status"></td>
+                <td data-info="Allocated Team Member">
+                    <select class="form-control" data-name="scope-team-member">
+                        <option value="">Select Team Member</option>
+                        {% for member in team_members %}
+                        <option value="{{ member.username }}">{{ member.username }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td data-info="Delete this row"><button class="btn btn-danger btn-sm delete-scope">Delete</button></td>
+            </tr>`;
+        table.querySelector('tbody').insertAdjacentHTML('beforeend', newRow);
+    });
+
+    // Delete Scope Row
+    table.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('delete-scope')) {
+            e.target.closest('tr').remove();
+        }
+    });
+
+    // Save Modified Audit Plan
+    document.getElementById('save-modified-scope').addEventListener('click', function () {
+        const rows = Array.from(document.querySelectorAll('#scope-table tbody tr'));
+        const scopeData = rows.filter(row => row.querySelector('input[data-name="scope-name"]')).map(row => ({
+            name: row.querySelector('input[data-name="scope-name"]').value,
+            details: row.querySelector('input[data-name="scope-details"]').value,
+            detailed_procedure: row.querySelector('textarea[data-name="scope-procedure"]').value.split(",").map(item => item.trim()),
+            status: row.querySelector('input[data-name="scope-status"]').value,
+            allocation_team_member: row.querySelector('select[data-name="scope-team-member"]').value
+        }));
+
+        fetch(`/save_modified_audit_plan/{{ client._id }}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                scope: scopeData,
+                industry: "{{ client.industry_type or '' }}",
+                start_date: "{{ start_date }}",
+                end_date: "{{ end_date }}"
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Modified audit plan saved successfully!');
+            } else {
+                alert(data.error || 'Failed to save modified audit plan.');
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert('An error occurred while saving the modified audit plan.');
+        });
+    });
+
+    // Load Original Audit Scope
+    document.getElementById('load-scope').addEventListener('click', function () {
+        fetch(`/get_audit_scope/{{ client._id }}?start_date={{ start_date }}&end_date={{ end_date }}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.scope) {
+                    populateScopeTable(data.scope);
+                } else {
+                    alert(data.error || 'No audit scope data found for this period.');
+                }
+            })
+            .catch(error => {
+                console.error("Error loading audit scope:", error);
+                alert('An error occurred while loading audit scope.');
+            });
+    });
+
+    // Load Modified Audit Plan
+// Load Modified Audit Plan
+document.getElementById('load-modified-scope').addEventListener('click', function () {
+    fetch(`/client/{{ client._id }}/get_modified_audit_plan?start_date={{ start_date }}&end_date={{ end_date }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.scope) {
+                const tbody = table.querySelector('tbody');
+                tbody.innerHTML = ''; // Clear existing rows
+
+                data.scope.forEach(scope => {
+                    const row = `
+                        <tr>
+                            <td data-info="${scope.name || ''}">
+                                <input type="text" class="form-control" value="${scope.name || ''}" data-name="scope-name">
+                            </td>
+                            <td data-info="${scope.details || ''}">
+                                <input type="text" class="form-control" value="${scope.details || ''}" data-name="scope-details">
+                            </td>
+                            <td data-info="${(scope.detailed_procedure || []).join(', ')}">
+                                <textarea class="form-control" data-name="scope-procedure">${(scope.detailed_procedure || []).join(", ")}</textarea>
+                            </td>
+                            <td data-info="${scope.status || ''}">
+                                <input type="text" class="form-control" value="${scope.status || ''}" data-name="scope-status">
+                            </td>
+                            <td data-info="${scope.allocation_team_member || ''}">
+                                <select class="form-control" data-name="scope-team-member">
+                                    <option value="">Select Team Member</option>
+                                    {% for member in team_members %}
+                                    <option value="{{ member.username }}" 
+                                        ${scope.allocation_team_member === "{{ member.username }}" ? "selected" : ""}>
+                                        {{ member.username }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td data-info="Delete this row">
+                                <button class="btn btn-danger btn-sm delete-scope">Delete</button>
+                            </td>
+                        </tr>`;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            } else {
+                alert(data.error || 'No modified audit plan found for this period.');
+            }
+        })
+        .catch(error => {
+            console.error("Error loading modified audit plan:", error);
+            alert('An error occurred while loading the modified audit plan.');
+        });
+});
+
+    // Helper function to populate the scope table
+    function populateScopeTable(scopeData) {
+        const tbody = table.querySelector('tbody');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        if (!Array.isArray(scopeData) || scopeData.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center">No audit scope data available for this period.</td>
+                </tr>`;
+            return;
+        }
+
+        scopeData.forEach(scope => {
+            const row = `
+                <tr>
+                    <td data-info="${scope.name || ''}"><input type="text" class="form-control" value="${scope.name || ''}" data-name="scope-name"></td>
+                    <td data-info="${scope.details || ''}"><input type="text" class="form-control" value="${scope.details || ''}" data-name="scope-details"></td>
+                    <td data-info="${(scope.detailed_procedure || []).join(', ')}"><textarea class="form-control" data-name="scope-procedure">${(scope.detailed_procedure || []).join(", ")}</textarea></td>
+                    <td data-info="${scope.status || ''}"><input type="text" class="form-control" value="${scope.status || ''}" data-name="scope-status"></td>
+                    <td data-info="${scope.allocation_team_member || ''}">
+                        <select class="form-control" data-name="scope-team-member">
+                            <option value="">Select Team Member</option>
+                            {% for member in team_members %}
+                            <option value="{{ member.username }}" ${scope.allocation_team_member === "{{ member.username }}" ? "selected" : ""}>
+                                {{ member.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td data-info="Delete this row"><button class="btn btn-danger btn-sm delete-scope">Delete</button></td>
+                </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+});
+
+// Load Dynamic Audit Scope
+function loadDynamicAuditScope() {
+    fetch('/get_dynamic_audit_scope')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.querySelector('#dynamic-scope-table tbody');
+                tbody.innerHTML = '';
+
+                data.scope_items.forEach(scope => {
+                    const row = `
+                        <tr data-scope-id="${scope._id}">
+                            <td>
+                                <input type="checkbox" class="scope-selector">
+                            </td>
+                            <td>${scope['Scope Area']}</td>
+                            <td>${scope['Details']}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info view-procedures" 
+                                        data-procedures='${JSON.stringify(scope['Detailed Procedure'])}'>
+                                    View Procedures
+                                </button>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary add-single-scope">
+                                    Add This Scope
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+        })
+        .catch(error => console.error('Error loading dynamic scope:', error));
+}
+
+// Add event listener for adding selected scope items
+document.getElementById('add-selected-scope').addEventListener('click', function() {
+    const selectedScopes = document.querySelectorAll('#dynamic-scope-table .scope-selector:checked');
+    selectedScopes.forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        const scopeData = {
+            name: row.cells[1].textContent,
+            details: row.cells[2].textContent,
+            detailed_procedure: JSON.parse(row.querySelector('.view-procedures').dataset.procedures),
+            status: "Pending",
+            allocation_team_member: ""
+        };
+        addScopeToMainTable(scopeData);
+    });
+});
+
+// Function to add scope to main table
+function addScopeToMainTable(scopeData) {
+    const mainTableBody = document.querySelector('#scope-table tbody');
+    const newRow = `
+        <tr>
+            <td data-info="${scopeData.name}">
+                <input type="text" class="form-control" value="${scopeData.name}" data-name="scope-name">
+            </td>
+            <td data-info="${scopeData.details}">
+                <input type="text" class="form-control" value="${scopeData.details}" data-name="scope-details">
+            </td>
+            <td data-info="${scopeData.detailed_procedure.join(', ')}">
+                <textarea class="form-control" data-name="scope-procedure">${scopeData.detailed_procedure.join(', ')}</textarea>
+            </td>
+            <td data-info="${scopeData.status}">
+                <input type="text" class="form-control" value="${scopeData.status}" data-name="scope-status">
+            </td>
+            <td data-info="Select team member">
+                <select class="form-control" data-name="scope-team-member">
+                    <option value="">Select Team Member</option>
+                    {% for member in team_members %}
+                    <option value="{{ member.username }}">{{ member.username }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td data-info="Delete this row">
+                <button class="btn btn-danger btn-sm delete-scope">Delete</button>
+            </td>
+        </tr>
+    `;
+    mainTableBody.insertAdjacentHTML('beforeend', newRow);
+}
+
+// Add procedures view modal
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('view-procedures')) {
+        const procedures = JSON.parse(e.target.dataset.procedures);
+        const modalHtml = `
+            <div class="modal fade" id="proceduresModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Detailed Procedures</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <ul>
+                                ${procedures.map(proc => `<li>${proc}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('proceduresModal'));
+        modal.show();
+        
+        // Clean up modal after hiding
+        document.getElementById('proceduresModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    }
+});
+
+// Load dynamic scope when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadDynamicAuditScope();
+});
+// Toggle button text and icon based on collapse state
+document.addEventListener('DOMContentLoaded', function() {
+    const collapseElement = document.getElementById('dynamicScopeCard');
+    const toggleButton = document.getElementById('toggleDynamicScope');
+    const buttonIcon = toggleButton.querySelector('i');
+    const buttonText = toggleButton.querySelector('span');
+
+    // Initialize Bootstrap collapse
+    const bsCollapse = new bootstrap.Collapse(collapseElement, {
+        toggle: false
+    });
+
+    // Update button on show/hide
+    collapseElement.addEventListener('show.bs.collapse', function () {
+        buttonIcon.classList.remove('fa-chevron-down');
+        buttonIcon.classList.add('fa-chevron-up');
+        buttonText.textContent = ' Hide Available Audit Scopes';
+        loadDynamicAuditScope(); // Load data when showing
+    });
+
+    collapseElement.addEventListener('hide.bs.collapse', function () {
+        buttonIcon.classList.remove('fa-chevron-up');
+        buttonIcon.classList.add('fa-chevron-down');
+        buttonText.textContent = ' Show Available Audit Scopes';
+    });
+
+    // Optional: Add click handler for manual toggle
+    toggleButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        bsCollapse.toggle();
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const collapseElement = document.getElementById('dynamicScopeCard');
+    const toggleButton = document.getElementById('toggleDynamicScope');
+    const buttonIcon = toggleButton.querySelector('i');
+    const buttonText = toggleButton.querySelector('span');
+
+    collapseElement.addEventListener('show.bs.collapse', function () {
+        buttonIcon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        buttonText.textContent = 'Hide Available Audit Scopes';
+        loadDynamicAuditScope(); // Load data when showing
+    });
+
+    collapseElement.addEventListener('hide.bs.collapse', function () {
+        buttonIcon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        buttonText.textContent = 'Show Available Audit Scopes';
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('scopeSearch');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const statusFilter = document.getElementById('statusFilter');
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusTerm = statusFilter.value.toLowerCase();
+        const rows = document.querySelectorAll('#dynamic-scope-table tbody tr');
+
+        rows.forEach(row => {
+            const scopeArea = row.cells[1].textContent.toLowerCase();
+            const details = row.cells[2].textContent.toLowerCase();
+            const status = row.querySelector('.badge')?.textContent.toLowerCase() || '';
+
+            const matchesSearch = scopeArea.includes(searchTerm) || 
+                                details.includes(searchTerm);
+            const matchesStatus = !statusTerm || status.includes(statusTerm);
+
+            row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+        });
+
+        updateSelectedCount();
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+    
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        statusFilter.value = '';
+        filterTable();
+    });
+
+    // Update selected count
+    function updateSelectedCount() {
+        const selectedCheckboxes = document.querySelectorAll('#dynamic-scope-table .scope-selector:checked');
+        const countDisplay = document.getElementById('selectedCount');
+        countDisplay.textContent = `${selectedCheckboxes.length} items selected`;
+    }
+
+    // Add event listener for checkboxes
+    document.getElementById('dynamic-scope-table').addEventListener('change', function(e) {
+        if (e.target.classList.contains('scope-selector')) {
+            updateSelectedCount();
+        }
+    });
+});
+
+// Enhanced loadDynamicAuditScope function
+function loadDynamicAuditScope() {
+    const tbody = document.querySelector('#dynamic-scope-table tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+
+    fetch('/get_dynamic_audit_scope')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                tbody.innerHTML = '';
+                data.scope_items.forEach(scope => {
+                    const row = `
+                        <tr data-scope-id="${scope._id}">
+                            <td>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input scope-selector">
+                                </div>
+                            </td>
+                            <td>${scope['Scope Area']}</td>
+                            <td>${scope['Details']}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info view-procedures" 
+                                        data-procedures='${JSON.stringify(scope['Detailed Procedure'])}'>
+                                    <i class="fas fa-list"></i> View
+                                </button>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary add-single-scope">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No audit scopes available</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading dynamic scope:', error);
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading audit scopes</td></tr>';
+        });
+}
+</script>
+
+{% endblock %}
