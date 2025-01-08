@@ -107,7 +107,7 @@ BUCKET_ID = os.getenv("APPWRITE_BUCKET_ID")
 
                   # Replace with your actual bucket ID
 
-logging.basicConfig(level=logging.DEBUG, filename="app.log", format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.DEBUG, filename="/tmp/app.log", format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Register the blueprint
 app.register_blueprint(financials)
