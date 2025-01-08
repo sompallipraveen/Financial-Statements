@@ -34,3 +34,5 @@ Flask-Mail==0.9.1
 user-agents==2.2.0
 ua-parser==1.0.0
 ua-parser-builtins==0.18.0.post1
+xlsxwriter==3.1.0
+
