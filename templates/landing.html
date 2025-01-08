@@ -2223,6 +2223,688 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<section class="financial-automation py-5 bg-gradient-to-r from-indigo-50 to-blue-50">
+    <div class="container">
+        <h2 class="text-center section-title mb-5">
+            <span class="gradient-text">Financial Statement Automation</span>
+            <div class="title-underline"></div>
+        </h2>
+
+        <div class="automation-cards">
+            <!-- Balance Sheet Automation -->
+            <div class="automation-card" data-aos="fade-up">
+                <div class="card-icon">
+                    <i class="fas fa-balance-scale"></i>
+                </div>
+                <h3>Balance Sheet</h3>
+                <div class="typewriter-text" id="balance-sheet-text"></div>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Automated Asset Classification</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Liability Categorization</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Equity Tracking</span>
+                    </li>
+                </ul>
+                <div class="code-preview">
+                    <pre><code>def get_balance_sheet():
+    current_assets = calculate_assets()
+    liabilities = track_liabilities()
+    equity = compute_equity()
+    return balance_validation()</code></pre>
+                </div>
+            </div>
+
+            <!-- Profit & Loss Automation -->
+            <div class="automation-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Profit & Loss Statement</h3>
+                <div class="typewriter-text" id="pl-text"></div>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Revenue Recognition</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Expense Categorization</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Profit Calculation</span>
+                    </li>
+                </ul>
+                <div class="code-preview">
+                    <pre><code>def generate_profit_loss():
+    total_revenue = sum_revenues()
+    total_expenses = calculate_expenses()
+    return compute_profit_loss()</code></pre>
+                </div>
+            </div>
+
+            <!-- Cash Flow Automation -->
+            <div class="automation-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="card-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3>Cash Flow Statement</h3>
+                <div class="typewriter-text" id="cash-flow-text"></div>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Operating Activities</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Investment Tracking</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Financing Activities</span>
+                    </li>
+                </ul>
+                <div class="code-preview">
+                    <pre><code>def generate_cash_flow():
+    operating = track_operations()
+    investing = monitor_investments()
+    financing = track_financing()
+    return validate_cash_flow()</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.automation-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.automation-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.automation-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(79, 70, 229, 0.15);
+}
+
+.card-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    color: white;
+    font-size: 2rem;
+    position: relative;
+}
+
+.card-icon::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid #4f46e5;
+    animation: pulse 2s infinite;
+}
+
+.automation-card h3 {
+    font-size: 1.5rem;
+    color: #2d3748;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.typewriter-text {
+    min-height: 60px;
+    color: #4a5568;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.feature-list li:hover {
+    background: rgba(79, 70, 229, 0.1);
+    transform: translateX(10px);
+}
+
+.feature-list i {
+    color: #4f46e5;
+    margin-right: 0.75rem;
+}
+
+.code-preview {
+    background: #1a1b26;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.code-preview pre {
+    margin: 0;
+}
+
+.code-preview code {
+    color: #a9b1d6;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typewriterContent = {
+        'balance-sheet-text': [
+            'Automated asset and liability classification',
+            'Real-time financial position tracking',
+            'Instant ratio analysis and validation'
+        ],
+        'pl-text': [
+            'Automated revenue recognition',
+            'Smart expense categorization',
+            'Real-time profitability analysis'
+        ],
+        'cash-flow-text': [
+            'Automated cash flow tracking',
+            'Smart activity categorization',
+            'Real-time liquidity analysis'
+        ]
+    };
+
+    class Typewriter {
+        constructor(elementId, words) {
+            this.element = document.getElementById(elementId);
+            this.words = words;
+            this.txt = '';
+            this.wordIndex = 0;
+            this.isDeleting = false;
+            this.type();
+        }
+
+        type() {
+            const current = this.wordIndex % this.words.length;
+            const fullTxt = this.words[current];
+
+            if (this.isDeleting) {
+                this.txt = fullTxt.substring(0, this.txt.length - 1);
+            } else {
+                this.txt = fullTxt.substring(0, this.txt.length + 1);
+            }
+
+            this.element.innerHTML = this.txt + '<span class="cursor">|</span>';
+
+            let typeSpeed = 50;
+
+            if (this.isDeleting) {
+                typeSpeed /= 2;
+            }
+
+            if (!this.isDeleting && this.txt === fullTxt) {
+                typeSpeed = 2000;
+                this.isDeleting = true;
+            } else if (this.isDeleting && this.txt === '') {
+                this.isDeleting = false;
+                this.wordIndex++;
+                typeSpeed = 500;
+            }
+
+            setTimeout(() => this.type(), typeSpeed);
+        }
+    }
+
+    // Initialize typewriters
+    Object.keys(typewriterContent).forEach(id => {
+        new Typewriter(id, typewriterContent[id]);
+    });
+
+    // Initialize AOS
+    AOS.init({
+        duration: 1000,
+        once: true
+    });
+});
+</script>
+<section class="business-types py-5 bg-gradient-to-r from-indigo-50 to-blue-50">
+    <div class="container">
+        <h2 class="text-center section-title mb-5">
+            <span class="gradient-text">Business-Specific Financial Statements</span>
+            <div class="title-underline"></div>
+            <p class="section-subtitle">Automated financial statements generation as per business type and statutory requirements</p>
+        </h2>
+
+        <div class="business-type-slider">
+            <!-- Private Limited Company -->
+            <div class="business-slide">
+                <div class="business-card">
+                    <div class="card-badge">As per Companies Act 2013</div>
+                    <div class="card-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3>Private Limited Company</h3>
+                    <div class="typewriter-text" id="pvt-ltd-text"></div>
+                    <div class="requirements-list">
+                        <h4><i class="fas fa-file-alt"></i> Required Statements</h4>
+                        <ul>
+                            <li>Balance Sheet (Schedule III Format)</li>
+                            <li>Statement of Profit and Loss</li>
+                            <li>Cash Flow Statement (AS-3)</li>
+                            <li>Notes to Accounts (1-25)</li>
+                        </ul>
+                        
+                        <h4><i class="fas fa-clipboard-check"></i> Compliance Requirements</h4>
+                        <ul>
+                            <li>CARO 2020 Applicability</li>
+                            <li>Directors' Report</li>
+                            <li>Consolidated Statements (if applicable)</li>
+                            <li>Board's Report</li>
+                        </ul>
+
+                        <h4><i class="fas fa-book"></i> Applicable Standards</h4>
+                        <ul>
+                            <li>AS-1 to AS-29 (If IGAAP)</li>
+                            <li>IND-AS (If applicable)</li>
+                            <li>Schedule III Disclosures</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partnership Firm -->
+            <div class="business-slide">
+                <div class="business-card">
+                    <div class="card-badge">As per Partnership Act</div>
+                    <div class="card-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>Partnership Firm</h3>
+                    <div class="typewriter-text" id="partnership-text"></div>
+                    <div class="requirements-list">
+                        <h4><i class="fas fa-file-alt"></i> Required Statements</h4>
+                        <ul>
+                            <li>Trading Account</li>
+                            <li>Profit and Loss Account</li>
+                            <li>Balance Sheet</li>
+                            <li>Partners' Capital Accounts</li>
+                        </ul>
+
+                        <h4><i class="fas fa-clipboard-check"></i> Special Considerations</h4>
+                        <ul>
+                            <li>Partner Salary & Commission</li>
+                            <li>Interest on Capital</li>
+                            <li>Profit Sharing Ratio</li>
+                            <li>Current Account Adjustments</li>
+                        </ul>
+
+                        <h4><i class="fas fa-book"></i> Applicable Standards</h4>
+                        <ul>
+                            <li>Basic Accounting Standards</li>
+                            <li>Partnership Deed Terms</li>
+                            <li>State-specific Requirements</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Individual/Proprietorship -->
+            <div class="business-slide">
+                <div class="business-card">
+                    <div class="card-badge">As per Income Tax Act</div>
+                    <div class="card-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3>Individual/Proprietorship</h3>
+                    <div class="typewriter-text" id="proprietorship-text"></div>
+                    <div class="requirements-list">
+                        <h4><i class="fas fa-file-alt"></i> Required Statements</h4>
+                        <ul>
+                            <li>Statement of Affairs</li>
+                            <li>Income and Expenditure Account</li>
+                            <li>Capital Account</li>
+                            <li>Drawing Account</li>
+                        </ul>
+
+                        <h4><i class="fas fa-clipboard-check"></i> Tax Compliance</h4>
+                        <ul>
+                            <li>ITR-3/4 Requirements</li>
+                            <li>Presumptive Taxation (44AD/44ADA)</li>
+                            <li>Tax Audit (if applicable)</li>
+                        </ul>
+
+                        <h4><i class="fas fa-book"></i> Documentation</h4>
+                        <ul>
+                            <li>Basic Accounting Records</li>
+                            <li>Bank Reconciliation</li>
+                            <li>Asset Register</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LLP -->
+            <div class="business-slide">
+                <div class="business-card">
+                    <div class="card-badge">As per LLP Act 2008</div>
+                    <div class="card-icon">
+                        <i class="fas fa-sitemap"></i>
+                    </div>
+                    <h3>Limited Liability Partnership</h3>
+                    <div class="typewriter-text" id="llp-text"></div>
+                    <div class="requirements-list">
+                        <h4><i class="fas fa-file-alt"></i> Required Statements</h4>
+                        <ul>
+                            <li>Statement of Assets & Liabilities</li>
+                            <li>Statement of Income & Expenditure</li>
+                            <li>Partners' Account</li>
+                            <li>Annual Return</li>
+                        </ul>
+
+                        <h4><i class="fas fa-clipboard-check"></i> Statutory Requirements</h4>
+                        <ul>
+                            <li>Statement of Account & Solvency</li>
+                            <li>Annual Return (Form 11)</li>
+                            <li>Income Tax Return</li>
+                        </ul>
+
+                        <h4><i class="fas fa-book"></i> Applicable Guidelines</h4>
+                        <ul>
+                            <li>LLP Agreement Terms</li>
+                            <li>Accounting Standards</li>
+                            <li>MCA Guidelines</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.business-type-slider {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.business-slide {
+    display: none;
+    opacity: 0;
+    transition: all 0.5s ease;
+}
+
+.business-slide.active {
+    display: block;
+    opacity: 1;
+    animation: slideInRight 0.5s ease-out;
+}
+
+.business-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.business-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(79, 70, 229, 0.15);
+}
+
+.card-badge {
+    position: absolute;
+    top: 20px;
+    right: -35px;
+    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    color: white;
+    padding: 0.5rem 2rem;
+    transform: rotate(45deg);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.card-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    color: white;
+    font-size: 2rem;
+    position: relative;
+}
+
+.business-card h3 {
+    font-size: 1.8rem;
+    color: #2d3748;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.typewriter-text {
+    min-height: 60px;
+    color: #4a5568;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.requirements-list {
+    text-align: left;
+}
+
+.requirements-list h4 {
+    color: #2d3748;
+    font-size: 1.2rem;
+    margin: 1.5rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.requirements-list h4 i {
+    color: #4f46e5;
+}
+
+.requirements-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+}
+
+.requirements-list li {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    color: #4a5568;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.requirements-list li::before {
+    content: "•";
+    color: #4f46e5;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.requirements-list li:hover {
+    background: rgba(79, 70, 229, 0.1);
+    transform: translateX(10px);
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typewriterContent = {
+        'pvt-ltd-text': [
+            'Schedule III compliant statements',
+            'Comprehensive notes & disclosures',
+            'Statutory compliance automation'
+        ],
+        'partnership-text': [
+            'Partner account automation',
+            'Profit sharing calculations',
+            'Capital account tracking'
+        ],
+        'proprietorship-text': [
+            'Simplified financial statements',
+            'Tax compliance automation',
+            'Asset-liability tracking'
+        ],
+        'llp-text': [
+            'LLP Act compliant statements',
+            'Partner account management',
+            'Statutory filing automation'
+        ]
+    };
+
+    class Typewriter {
+        constructor(elementId, words) {
+            this.element = document.getElementById(elementId);
+            this.words = words;
+            this.txt = '';
+            this.wordIndex = 0;
+            this.isDeleting = false;
+            this.type();
+        }
+
+        type() {
+            const current = this.wordIndex % this.words.length;
+            const fullTxt = this.words[current];
+
+            if (this.isDeleting) {
+                this.txt = fullTxt.substring(0, this.txt.length - 1);
+            } else {
+                this.txt = fullTxt.substring(0, this.txt.length + 1);
+            }
+
+            this.element.innerHTML = this.txt + '<span class="cursor">|</span>';
+
+            let typeSpeed = 50;
+
+            if (this.isDeleting) {
+                typeSpeed /= 2;
+            }
+
+            if (!this.isDeleting && this.txt === fullTxt) {
+                typeSpeed = 2000;
+                this.isDeleting = true;
+            } else if (this.isDeleting && this.txt === '') {
+                this.isDeleting = false;
+                this.wordIndex++;
+                typeSpeed = 500;
+            }
+
+            setTimeout(() => this.type(), typeSpeed);
+        }
+    }
+
+    // Initialize typewriters
+    Object.keys(typewriterContent).forEach(id => {
+        new Typewriter(id, typewriterContent[id]);
+    });
+
+    // Slider functionality
+    const slides = document.querySelectorAll('.business-slide');
+    let currentSlide = 0;
+
+    function showSlide(index) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        slides[index].classList.add('active');
+    }
+
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }
+
+    // Show first slide and start rotation
+    showSlide(0);
+    setInterval(nextSlide, 7000);
+
+    // Add click functionality for manual navigation
+    const navigationDots = document.createElement('div');
+    navigationDots.className = 'slider-navigation';
+    slides.forEach((_, index) => {
+        const dot = document.createElement('button');
+        dot.className = 'nav-dot';
+        dot.onclick = () => {
+            currentSlide = index;
+            showSlide(currentSlide);
+        };
+        navigationDots.appendChild(dot);
+    });
+    document.querySelector('.business-type-slider').appendChild(navigationDots);
+});
+</script>
 <section id="features" class="py-5">
     <div class="container">
         <h2 class="text-center section-title">Why Choose Our Application?</h2>
