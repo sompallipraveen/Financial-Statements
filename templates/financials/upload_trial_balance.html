@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>Upload Trial Balance</h2>
+                <p class="text-muted">{{ client.legal_name }} - FY {{ client.fiscal_year }}</p>
+            </div>
+            <a href="{{ url_for('financials.financial_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Upload Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h4 class="card-title mb-0">Upload Trial Balance</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Upload Form -->
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="form-group">
+                            <label for="trial_balance_file">Select Excel File</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="trial_balance_file" 
+                                       name="trial_balance_file" accept=".xlsx,.xls" required>
+                                <label class="custom-file-label" for="trial_balance_file">Choose file...</label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Supported formats: .xlsx, .xls (Max size: 5MB)
+                            </small>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div class="progress mt-3 d-none" id="uploadProgress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%"></div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary" id="uploadButton">
+                                <i class="fas fa-upload"></i> Upload Trial Balance
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary ml-2" 
+                                    onclick="window.location.href='{{ url_for('financials.download_template') }}'">
+                                <i class="fas fa-download"></i> Download Template
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template Preview Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h4 class="card-title mb-0">Template Format</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Account Code</th>
+                                    <th>Account Name</th>
+                                    <th>Debit</th>
+                                    <th>Credit</th>
+                                    <th>Account Type</th>
+                                    <th>Financial Statement Mapping</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <tr>
+                                        <td>1001</td>
+                                        <td>Cash in Hand</td>
+                                        <td class="text-right">150,000</td>
+                                        <td class="text-right">0</td>
+                                        <td>Asset</td>
+                                        <td>BS-cash_and_equivalents</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3001</td>
+                                        <td>Sales Account</td>
+                                        <td class="text-right">0</td>
+                                        <td class="text-right">250,000</td>
+                                        <td>Revenue</td>
+                                        <td>PL-sales_revenue</td>
+                                    </tr>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mapping Guide -->
+                    <div class="mt-4">
+                        <h5>Mapping Guide:</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-2">Balance Sheet Subschedules</h6>
+                                <h7>Current Assets</h7>
+                                <ul class="list-unstyled small">
+                                    <li>BS-cash_and_equivalents</li>
+                                    <li>BS-trade_receivables</li>
+                                    <li>BS-inventories</li>
+                                    <li>BS-loans_and_advances</li>
+                                    <li>BS-other_current_assets</li>
+                                </ul>
+                                <h7>Fixed Assets</h7>
+                                <ul class="list-unstyled small">
+                                    <li>BS-tangible_assets</li>
+                                    <li>BS-intangible_assets</li>
+                                </ul>
+                                <h7>Investments</h7>
+                                <ul class="list-unstyled small">
+                                    <li>BS-long_term_investments</li>
+                                    <li>BS-short_term_investments</li>
+                                </ul>
+                                <h7>Liabilities</h7>
+                                <ul class="list-unstyled small">
+                                    <li>BS-msme_payables</li>
+                                    <li>BS-other_payables</li>
+                                    <li>BS-statutory_dues</li>
+                                    <li>BS-short_term_borrowings</li>
+                                    <li>BS-other_current_liabilities</li>
+                                    <li>BS-secured_loans</li>
+                                    <li>BS-unsecured_loans</li>
+                                </ul>
+                                <h7>Equity</h7>
+                                <ul class="list-unstyled small">
+                                    <li>BS-equity_share_capital</li>
+                                    <li>BS-general_reserve</li>
+                                    <li>BS-capital_reserve</li>
+                                    <li>BS-retained_earnings</li>
+                                    <li>BS-securities_premium</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-2">Profit & Loss Subschedules</h6>
+                                <h7>Income</h7>
+                                <ul class="list-unstyled small">
+                                    <li>PL-sales_revenue</li>
+                                    <li>PL-service_income</li>
+                                    <li>PL-Other Income</li>
+                                    <li>PL-interest_income</li>
+                                    <li>PL-other_operating_income</li>
+                                </ul>
+                                <h7>Expenses</h7>
+                                <ul class="list-unstyled small">
+                                    <li>PL-material_purchases</li>
+                                    <li>PL-direct_expenses</li>
+                                    <li>PL-employee_benefits</li>
+                                    <li>PL-finance_costs</li>
+                                    <li>PL-depreciation</li>
+                                    <li>PL-admin_expenses</li>
+                                    <li>PL-selling_expenses</li>
+                                    <li>PL-current_tax</li>
+                                    <li>PL-deferred_tax</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Types Guide -->
+                    <div class="mt-4">
+                        <h5>Account Types:</h5>
+                        <ul class="list-inline small">
+                            <li class="list-inline-item badge badge-light mr-2">Asset</li>
+                            <li class="list-inline-item badge badge-light mr-2">Liability</li>
+                            <li class="list-inline-item badge badge-light mr-2">Equity</li>
+                            <li class="list-inline-item badge badge-light mr-2">Revenue</li>
+                            <li class="list-inline-item badge badge-light">Expense</li>
+                        </ul>
+                    </div>
+
+                    <!-- Requirements Section -->
+                    <div class="mt-4">
+                        <h5>Requirements:</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                Excel file (.xlsx or .xls format)
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                All columns are required
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                Total debits must equal total credits
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                Account codes must be unique
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                Proper mapping for Balance Sheet and P&L
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for file upload handling -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('trial_balance_file');
+    const progressBar = document.getElementById('uploadProgress');
+    const progressBarInner = progressBar.querySelector('.progress-bar');
+    const uploadButton = document.getElementById('uploadButton');
+    
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const label = document.querySelector('.custom-file-label');
+        
+        if (file) {
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('danger', 'File size too large. Maximum size is 5MB.');
+                fileInput.value = '';
+                label.textContent = 'Choose file...';
+                return;
+            }
+            
+            // Validate file type
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            if (!['xlsx', 'xls'].includes(fileExtension)) {
+                showAlert('danger', 'Invalid file type. Please upload an Excel file (.xlsx or .xls)');
+                fileInput.value = '';
+                label.textContent = 'Choose file...';
+                return;
+            }
+            
+            label.textContent = file.name;
+        } else {
+            label.textContent = 'Choose file...';
+        }
+    });
+
+    // Form submission handler
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!fileInput.files[0]) {
+            showAlert('danger', 'Please select a file to upload');
+            return;
+        }
+
+        // Clear previous alerts
+        clearAlerts();
+        
+        // Show progress bar
+        progressBar.classList.remove('d-none');
+        uploadButton.disabled = true;
+        
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                progressBarInner.style.width = '100%';
+                progressBarInner.classList.remove('progress-bar-animated');
+                showAlert('success', data.message);
+                
+                // Redirect after success
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('financials.financial_dashboard') }}";
+                }, 1500);
+            } else {
+                throw new Error(data.error || 'Failed to upload file');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showAlert('danger', error.message || 'Error uploading file. Please try again.');
+            resetUpload();
+        }
+    });
+
+    function showAlert(type, message) {
+        clearAlerts();
+        const alertHtml = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        form.insertAdjacentHTML('beforebegin', alertHtml);
+    }
+
+    function clearAlerts() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => alert.remove());
+    }
+
+    function resetUpload() {
+        progressBar.classList.add('d-none');
+        progressBarInner.style.width = '0%';
+        progressBarInner.classList.add('progress-bar-animated');
+        uploadButton.disabled = false;
+        fileInput.value = '';
+        document.querySelector('.custom-file-label').textContent = 'Choose file...';
+    }
+});
+</script>
+
+<!-- Custom styles -->
+<style>
+    .custom-file-label::after {
+        content: "Browse";
+    }
+    
+    .progress {
+        height: 1.5rem;
+    }
+    
+    .list-group-item i {
+        margin-right: 10px;
+    }
+    
+    .table td.text-right {
+        text-align: right;
+    }
+    
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: none;
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+</style>
+{% endblock %}

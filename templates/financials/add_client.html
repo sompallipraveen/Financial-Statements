@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header mb-4">
+        <h2>Add Financial Statement Client</h2>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" class="needs-validation" novalidate>
+                <!-- Basic Information -->
+                <h4 class="mb-3">Basic Information</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="legal_name">Legal Name*</label>
+                            <input type="text" class="form-control" id="legal_name" name="legal_name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="pan">PAN*</label>
+                            <input type="text" class="form-control" id="pan" name="pan" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" required>
+                            <small class="form-text text-muted">Format: ABCDE1234F</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="registration_number">Registration Number/CIN*</label>
+                            <input type="text" class="form-control" id="registration_number" name="registration_number" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="business_type">Business Type*</label>
+                            <select class="form-control" id="business_type" name="business_type" required>
+                                <option value="">Select Business Type</option>
+                                <option value="Private Limited">Private Limited</option>
+                                <option value="Individual">Individual</option>
+                                <option value="Partnership Firm">Partnership Firm</option>
+                                <option value="Public Limited">Public Limited</option>
+                                <option value="Trust">Trust</option>
+                                <option value="One Person Company">One Person Company</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="registered_address">Registered Address*</label>
+                    <textarea class="form-control" id="registered_address" name="registered_address" rows="3" required></textarea>
+                </div>
+
+                <!-- Financial Information -->
+                <h4 class="mt-4 mb-3">Financial Information</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="fiscal_year">Fiscal Year*</label>
+                            <input type="text" class="form-control" id="fiscal_year" name="fiscal_year" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="standards_applicability">Standards Applicability*</label>
+                            <select class="form-control" id="standards_applicability" name="standards_applicability" required>
+                                <option value="">Select Standard</option>
+                                <option value="INDAS">IND AS</option>
+                                <option value="IGAAP">IGAAP</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="start_date">Start Date*</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="end_date">End Date*</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signatory Details -->
+                <h4 class="mt-4 mb-3">Signatory Details</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="signatory_name">Name of the Signatory*</label>
+                            <input type="text" class="form-control" id="signatory_name" name="signatory_name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="signatory_designation">Designation*</label>
+                            <input type="text" class="form-control" id="signatory_designation" name="signatory_designation" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="signatory_pan">PAN*</label>
+                            <input type="text" class="form-control" id="signatory_pan" name="signatory_pan" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="signatory_place">Place*</label>
+                            <input type="text" class="form-control" id="signatory_place" name="signatory_place" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="signatory_date">Date*</label>
+                            <input type="date" class="form-control" id="signatory_date" name="signatory_date" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Firm Details -->
+                <h4 class="mt-4 mb-3">Audit Firm Details</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="audit_firm_name">Audit Firm Name*</label>
+                            <input type="text" class="form-control" id="audit_firm_name" name="audit_firm_name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="frn">FRN*</label>
+                            <input type="text" class="form-control" id="frn" name="frn" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="udin">UDIN*</label>
+                            <input type="text" class="form-control" id="udin" name="udin" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="auditor_name">Name of the Auditor*</label>
+                            <input type="text" class="form-control" id="auditor_name" name="auditor_name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="membership_no">Membership No*</label>
+                            <input type="text" class="form-control" id="membership_no" name="membership_no" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Settings -->
+                <h4 class="mt-4 mb-3">Additional Settings</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="caro_applicable">CARO Applicable*</label>
+                            <select class="form-control" id="caro_applicable" name="caro_applicable" required>
+                                <option value="">Select Option</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="rounding_amount">Rounding Amount in Financials*</label>
+                            <select class="form-control" id="rounding_amount" name="rounding_amount" required>
+                                <option value="">Select Option</option>
+                                <option value="Thousand">Thousand</option>
+                                <option value="Lakhs">Lakhs</option>
+                                <option value="Million">Million</option>
+                                <option value="Crores">Crores</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="decimal_rounding">Number of Decimals*</label>
+                            <select class="form-control" id="decimal_rounding" name="decimal_rounding" required>
+                                <option value="">Select Option</option>
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Add Client</button>
+                    <a href="{{ url_for('financials.financial_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

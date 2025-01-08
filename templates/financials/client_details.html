@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+<!-- Page Header -->
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2>{{ client.get('legal_name', 'N/A') }}</h2>
+            <p class="text-muted">Financial Year: {{ client.get('fiscal_year', 'N/A') }}</p>
+        </div>
+        <div class="d-flex">
+            <a href="{{ url_for('financials.financial_dashboard') }}" 
+               class="btn btn-outline-secondary mr-2">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            
+            {% if not trial_balance %}
+                <a href="{{ url_for('financials.upload_trial_balance', client_id=client._id) }}" 
+                   class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Upload Trial Balance
+                </a>
+            {% else %}
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="generateStatementsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-file-invoice"></i> Generate Financial Statements
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="generateStatementsDropdown">
+                        <a class="dropdown-item" href="{{ url_for('financials.generate_balance_sheet_view', client_id=client._id) }}">
+                            <i class="fas fa-balance-scale"></i> Balance Sheet
+                        </a>
+                        <a class="dropdown-item" href="{{ url_for('financials.generate_profit_loss', client_id=client._id) }}">
+                            <i class="fas fa-chart-line"></i> Profit & Loss Statement
+                        </a>
+                        <a class="dropdown-item" href="{{ url_for('financials.generate_cash_flow', client_id=client._id) }}">
+                            <i class="fas fa-money-bill-wave"></i> Cash Flow Statement
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ url_for('financials.view_trial_balance', client_id=client._id) }}">
+                            <i class="fas fa-file-alt"></i> View Trial Balance
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ url_for('financials.export_all_financials_complete', client_id=client._id) }}">
+                            <i class="fas fa-file-export"></i> Export All Financials
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+    <!-- Client Details -->
+    <div class="row">
+        <!-- Basic Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-building"></i> Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <tbody>
+                            <tr>
+                                <th width="40%">Legal Name</th>
+                                <td>{{ client.get('legal_name', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>PAN</th>
+                                <td>{{ client.get('pan', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Registration Number/CIN</th>
+                                <td>{{ client.get('registration_number', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Business Type</th>
+                                <td>{{ client.get('business_type', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Registered Address</th>
+                                <td>{{ client.get('registered_address', 'N/A') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Financial Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <tbody>
+                            <tr>
+                                <th width="40%">Standards Applicability</th>
+                                <td>{{ client.get('standards_applicability', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Fiscal Year</th>
+                                <td>{{ client.get('fiscal_year', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Start Date</th>
+                                <td>
+                                    {% if client.get('start_date') %}
+                                        {% if client.start_date is string %}
+                                            {{ client.start_date }}
+                                        {% else %}
+                                            {{ client.start_date.strftime('%Y-%m-%d') }}
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>End Date</th>
+                                <td>
+                                    {% if client.get('end_date') %}
+                                        {% if client.end_date is string %}
+                                            {{ client.end_date }}
+                                        {% else %}
+                                            {{ client.end_date.strftime('%Y-%m-%d') }}
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>CARO Applicable</th>
+                                <td>
+                                    <span class="badge {% if client.get('settings', {}).get('caro_applicable') %}badge-success{% else %}badge-danger{% endif %}">
+                                        {{ 'Yes' if client.get('settings', {}).get('caro_applicable') else 'No' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signatory Details -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-signature"></i> Signatory Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <tbody>
+                            <tr>
+                                <th width="40%">Name</th>
+                                <td>{{ client.get('signatory', {}).get('name', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Designation</th>
+                                <td>{{ client.get('signatory', {}).get('designation', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>PAN</th>
+                                <td>{{ client.get('signatory', {}).get('pan', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Place</th>
+                                <td>{{ client.get('signatory', {}).get('place', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date</th>
+                                <td>
+                                    {% if client.get('signatory', {}).get('date') %}
+                                        {% if client.signatory.date is string %}
+                                            {{ client.signatory.date }}
+                                        {% else %}
+                                            {{ client.signatory.date.strftime('%Y-%m-%d') }}
+                                        {% endif %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Firm Details -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-user-tie"></i> Audit Firm Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <tbody>
+                            <tr>
+                                <th width="40%">Firm Name</th>
+                                <td>{{ client.get('audit_firm', {}).get('name', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>FRN</th>
+                                <td>{{ client.get('audit_firm', {}).get('frn', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>UDIN</th>
+                                <td>{{ client.get('audit_firm', {}).get('udin', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Auditor Name</th>
+                                <td>{{ client.get('audit_firm', {}).get('auditor_name', 'N/A') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Membership No</th>
+                                <td>{{ client.get('audit_firm', {}).get('membership_no', 'N/A') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Settings -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Additional Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Rounding Amount</h6>
+                                    <p class="mb-0 font-weight-bold">{{ client.get('settings', {}).get('rounding_amount', 'N/A') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Decimal Places</h6>
+                                    <p class="mb-0 font-weight-bold">{{ client.get('settings', {}).get('decimal_rounding', 'N/A') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>Last Modified</h6>
+                                    <p class="mb-0">{{ client.get('updated_at', 'N/A')|datetime }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    .card-header {
+        font-weight: 500;
+    }
+    .table th {
+        font-weight: 600;
+        color: #495057;
+    }
+    .badge {
+        font-size: 85%;
+        padding: 0.4em 0.8em;
+    }
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    .dropdown-item {
+        padding: 0.5rem 1rem;
+    }
+    .dropdown-item i {
+        width: 20px;
+        margin-right: 0.5rem;
+    }
+    .dropdown-item {
+    padding: 0.5rem 1rem;
+}
+.dropdown-item i {
+    width: 20px;
+    margin-right: 0.5rem;
+}
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+    </style>
+
+{% endblock %}

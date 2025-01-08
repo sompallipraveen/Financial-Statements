@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>{{ client.legal_name }}</h2>
+                <h3>Statement of Profit And Loss</h3>
+                <p class="text-muted">Year ended March 31, {{ client.fiscal_year }}</p>
+                <small class="text-muted">All amounts in INR {{ client.settings.rounding_amount }}, unless otherwise stated</small>
+            </div>
+            <div>
+                <a href="{{ url_for('financials.export_profit_loss_excel', client_id=client._id) }}" 
+                   class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </a>
+                <button class="btn btn-primary ml-2" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profit & Loss Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th width="50%">Particulars</th>
+                            <th class="text-center">Note</th>
+                            <th class="text-right">Year ended March 31, {{ client.fiscal_year }}</th>
+                            <th class="text-right">Year ended March 31, {{ client.fiscal_year|int - 1 }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- INCOME -->
+                        <tr class="table-light">
+                            <td colspan="4"><strong>INCOME</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Revenue From Operations</td>
+                            <td class="text-center">12</td>
+                            <td class="text-right">{{ format_amount(profit_loss.income.revenue_from_operations or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr>
+                            <td>Other Income</td>
+                            <td class="text-center">13</td>
+                            <td class="text-right">{{ format_amount(profit_loss.income.other_income or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td><strong>Total Income</strong></td>
+                            <td></td>
+                            <td class="text-right border-top">{{ format_amount(profit_loss.income.total_income or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+
+                        <!-- EXPENSES -->
+                        <tr class="table-light">
+                            <td colspan="4"><strong>EXPENSES</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Cost of Materials Consumed</td>
+                            <td class="text-center">14</td>
+                            <td class="text-right">{{ format_amount(profit_loss.expenses.cost_of_materials or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr>
+                            <td>Employee Benefits Expense</td>
+                            <td class="text-center">15</td>
+                            <td class="text-right">{{ format_amount(profit_loss.expenses.employee_benefits or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr>
+                            <td>Finance Costs</td>
+                            <td class="text-center">16</td>
+                            <td class="text-right">{{ format_amount(profit_loss.expenses.finance_costs or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr>
+                            <td>Depreciation and Amortisation</td>
+                            <td class="text-center">17</td>
+                            <td class="text-right">{{ format_amount(profit_loss.expenses.depreciation or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr>
+                            <td>Other Expenses</td>
+                            <td class="text-center">18</td>
+                            <td class="text-right">{{ format_amount(profit_loss.expenses.other_expenses or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td><strong>Total Expenses</strong></td>
+                            <td></td>
+                            <td class="text-right border-top">{{ format_amount(profit_loss.expenses.total_expenses or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+
+                        <!-- PROFIT/LOSS -->
+                        <tr class="table-light font-weight-bold">
+                            <td><strong>Profit before tax</strong></td>
+                            <td></td>
+                            <td class="text-right">{{ format_amount(profit_loss.profit_before_tax or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+
+                        <!-- TAX EXPENSES -->
+                        <tr class="table-light">
+                            <td colspan="4"><strong>TAX EXPENSES</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Current Tax</td>
+                            <td class="text-center">19</td>
+                            <td class="text-right">{{ format_amount(profit_loss.tax_expenses.current_tax or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr>
+                            <td>Deferred Tax</td>
+                            <td class="text-center">19</td>
+                            <td class="text-right">{{ format_amount(profit_loss.tax_expenses.deferred_tax or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td><strong>Total Tax Expenses</strong></td>
+                            <td></td>
+                            <td class="text-right border-top">{{ format_amount(profit_loss.tax_expenses.total_tax or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+
+                        <tr class="table-light font-weight-bold">
+                            <td><strong>PROFIT/LOSS FOR THE YEAR</strong></td>
+                            <td></td>
+                            <td class="text-right">{{ format_amount(profit_loss.profit_for_year or 0) }}</td>
+                            <td class="text-right">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signatures Section -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <p class="mb-0">For {{ client.audit_firm.name }}</p>
+            <p>Chartered Accountants</p>
+            <p>Firm Regn No: {{ client.audit_firm.frn }}</p>
+            
+            <div class="mt-4">
+                <p class="mb-0">{{ client.audit_firm.auditor_name }}</p>
+                <p>Partner</p>
+                <p>Membership No: {{ client.audit_firm.membership_no }}</p>
+                <p>Place: {{ client.audit_firm.place }}</p>
+                <p>Date: {{ client.audit_firm.date|datetime }}</p>
+            </div>
+        </div>
+        <div class="col-md-6 text-right">
+            <p class="mb-0">For {{ client.legal_name }}</p>
+            
+            <div class="mt-4">
+                <p class="mb-0">{{ client.signatory.name }}</p>
+                <p>{{ client.signatory.designation }}</p>
+                <p>PAN: {{ client.signatory.pan }}</p>
+                <p>Place: {{ client.signatory.place }}</p>
+                <p>Date: {{ client.signatory.date|datetime }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed-bottom mb-4 mr-4" style="right: 0;">
+    <a href="{{ url_for('financials.view_profit_loss_notes', client_id=client._id) }}" class="btn btn-info">
+        <i class="fas fa-list"></i> View Notes
+    </a>
+</div>
+
+<style>
+.table th {
+    background-color: #f8f9fa;
+}
+.table td, .table th {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+.table-light {
+    background-color: #f8f9fa;
+}
+.page-header h2 {
+    margin-bottom: 0.25rem;
+}
+.page-header h3 {
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}
+.font-weight-bold {
+    font-weight: bold;
+}
+.border-top {
+    border-top: 2px solid #dee2e6 !important;
+}
+@media print {
+    .btn {
+        display: none;
+    }
+    .card {
+        border: none;
+    }
+    .table {
+        width: 100% !important;
+    }
+    .fixed-bottom {
+        display: none;
+    }
+}
+</style>
+{% endblock %}

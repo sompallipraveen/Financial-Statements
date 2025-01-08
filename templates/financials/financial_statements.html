@@ -1,0 +1,305 @@
+<!-- templates/financials/financial_statements.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>Financial Statements</h2>
+                <p class="text-muted">{{ client.company_name }} - FY {{ client.fiscal_year }}</p>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('financials.financial_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                <a href="{{ url_for('financials.export_financial_statements', client_id=client._id) }}" 
+                   class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Statements -->
+    <div class="row">
+        <!-- Balance Sheet -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Balance Sheet</h5>
+                </div>
+                <div class="card-body">
+                    {% for category, entries in schedules.BS.items() %}
+                        {% if entries %}
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2">{{ category }}</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Account</th>
+                                                <th class="text-right">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for entry in entries %}
+                                                <tr>
+                                                    <td>{{ entry.account_name }}</td>
+                                                    <td class="text-right">
+                                                        {% if entry.type == 'Dr' %}
+                                                            {{ "{:,.2f}".format(entry.amount) }}
+                                                        {% else %}
+                                                            ({{ "{:,.2f}".format(entry.amount) }})
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            <tr class="table-light font-weight-bold">
+                                                <td>Total {{ category }}</td>
+                                                <td class="text-right">
+                                                    {{ "{:,.2f}".format(schedule_totals.BS[category]) }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit and Loss -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Profit and Loss Statement</h5>
+                </div>
+                <div class="card-body">
+                    {% for category, entries in schedules.PL.items() %}
+                        {% if entries %}
+                            <div class="mb-4">
+                                <h6 class="border-bottom pb-2">{{ category }}</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Account</th>
+                                                <th class="text-right">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for entry in entries %}
+                                                <tr>
+                                                    <td>{{ entry.account_name }}</td>
+                                                    <td class="text-right">
+                                                        {% if entry.type == 'Dr' %}
+                                                            {{ "{:,.2f}".format(entry.amount) }}
+                                                        {% else %}
+                                                            ({{ "{:,.2f}".format(entry.amount) }})
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            <tr class="table-light font-weight-bold">
+                                                <td>Total {{ category }}</td>
+                                                <td class="text-right">
+                                                    {{ "{:,.2f}".format(schedule_totals.PL[category]) }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Net Profit/Loss -->
+                    <div class="card bg-light mt-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 font-weight-bold">Net Profit/Loss</h6>
+                                <h6 class="mb-0 font-weight-bold {% if pl_total > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if pl_total > 0 %}
+                                        ₹{{ "{:,.2f}".format(pl_total) }}
+                                    {% else %}
+                                        (₹{{ "{:,.2f}".format(pl_total|absolute) }})
+                                    {% endif %}
+                                </h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedules Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Detailed Schedules</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="scheduleTabs" role="tablist">
+                        <!-- Balance Sheet Schedules -->
+                        <li class="nav-item">
+                            <a class="nav-link active" id="bs-tab" data-toggle="tab" href="#bs-schedules" role="tab">
+                                Balance Sheet Schedules
+                            </a>
+                        </li>
+                        <!-- P&L Schedules -->
+                        <li class="nav-item">
+                            <a class="nav-link" id="pl-tab" data-toggle="tab" href="#pl-schedules" role="tab">
+                                P&L Schedules
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-4" id="scheduleTabsContent">
+                        <!-- Balance Sheet Schedules Content -->
+                        <div class="tab-pane fade show active" id="bs-schedules">
+                            <div class="row">
+                                {% for category, entries in schedules.BS.items() %}
+                                    {% if entries %}
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-light">
+                                                    <h6 class="mb-0">Schedule: {{ category }}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Code</th>
+                                                                    <th>Account</th>
+                                                                    <th class="text-right">Dr</th>
+                                                                    <th class="text-right">Cr</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for entry in entries %}
+                                                                    <tr>
+                                                                        <td>{{ entry.account_code }}</td>
+                                                                        <td>{{ entry.account_name }}</td>
+                                                                        <td class="text-right">
+                                                                            {% if entry.type == 'Dr' %}
+                                                                                {{ "{:,.2f}".format(entry.amount) }}
+                                                                            {% else %}
+                                                                                -
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td class="text-right">
+                                                                            {% if entry.type == 'Cr' %}
+                                                                                {{ "{:,.2f}".format(entry.amount) }}
+                                                                            {% else %}
+                                                                                -
+                                                                            {% endif %}
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                                <tr class="font-weight-bold bg-light">
+                                                                    <td colspan="2">Total</td>
+                                                                    <td class="text-right">
+                                                                        {{ "{:,.2f}".format(entries|selectattr('type', 'equalto', 'Dr')|sum(attribute='amount')) }}
+                                                                    </td>
+                                                                    <td class="text-right">
+                                                                        {{ "{:,.2f}".format(entries|selectattr('type', 'equalto', 'Cr')|sum(attribute='amount')) }}
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- P&L Schedules Content -->
+                        <div class="tab-pane fade" id="pl-schedules">
+                            <div class="row">
+                                {% for category, entries in schedules.PL.items() %}
+                                    {% if entries %}
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-light">
+                                                    <h6 class="mb-0">Schedule: {{ category }}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Code</th>
+                                                                    <th>Account</th>
+                                                                    <th class="text-right">Dr</th>
+                                                                    <th class="text-right">Cr</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for entry in entries %}
+                                                                    <tr>
+                                                                        <td>{{ entry.account_code }}</td>
+                                                                        <td>{{ entry.account_name }}</td>
+                                                                        <td class="text-right">
+                                                                            {% if entry.type == 'Dr' %}
+                                                                                {{ "{:,.2f}".format(entry.amount) }}
+                                                                            {% else %}
+                                                                                -
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td class="text-right">
+                                                                            {% if entry.type == 'Cr' %}
+                                                                                {{ "{:,.2f}".format(entry.amount) }}
+                                                                            {% else %}
+                                                                                -
+                                                                            {% endif %}
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                                <tr class="font-weight-bold bg-light">
+                                                                    <td colspan="2">Total</td>
+                                                                    <td class="text-right">
+                                                                        {{ "{:,.2f}".format(entries|selectattr('type', 'equalto', 'Dr')|sum(attribute='amount')) }}
+                                                                    </td>
+                                                                    <td class="text-right">
+                                                                        {{ "{:,.2f}".format(entries|selectattr('type', 'equalto', 'Cr')|sum(attribute='amount')) }}
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table td, .table th {
+    padding: 0.5rem;
+}
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+.nav-tabs .nav-link.active {
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+</style>
+{% endblock %}

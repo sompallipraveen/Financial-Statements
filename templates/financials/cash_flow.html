@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2>{{ client.legal_name }}</h2>
+                <h3>Statement of Cash Flows</h3>
+                <p class="text-muted mb-0">For the year ended {{ client.end_date|datetime }}</p>
+                <small class="text-muted">All amounts in {{ client.settings.rounding_amount }}, unless otherwise stated</small>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('financials.export_cash_flow_excel', client_id=client._id) }}" 
+                   class="btn btn-primary">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cash Flow Statement Table -->
+    <div class="card mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="bg-light">
+                        <tr>
+                            <th style="width: 50%">Particulars</th>
+                            <th class="text-right">Year ended {{ client.end_date|datetime }}</th>
+                            <th class="text-right">Year ended {{ client.previous_end_date|datetime }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- A. Operating Activities -->
+                        <tr class="table-secondary">
+                            <td colspan="3"><strong>A. Cash Flow from Operating Activities</strong></td>
+                        </tr>
+                        
+                        <!-- Net Profit Before Tax -->
+                        <tr>
+                            <td>Net Profit Before Tax</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.profit_before_tax) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.prev_profit_before_tax) }}</td>
+                        </tr>
+
+                        <!-- Adjustments Section -->
+                        <tr class="bg-light">
+                            <td colspan="3"><em>Adjustments for:</em></td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Depreciation and Amortization</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.adjustments.depreciation) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.adjustments.prev_depreciation) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Interest Expense</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.adjustments.interest_expense) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.adjustments.prev_interest_expense) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Interest Income</td>
+                            <td class="text-right">({{ format_amount(cash_flow.operating_activities.adjustments.interest_income|abs) }})</td>
+                            <td class="text-right">({{ format_amount(cash_flow.operating_activities.adjustments.prev_interest_income|abs) }})</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Loss/(Profit) on Sale of Fixed Assets</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.adjustments.fixed_assets_profit_loss) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.adjustments.prev_fixed_assets_profit_loss) }}</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td>Operating Profit before Working Capital Changes</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.operating_profit_before_wc) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.prev_operating_profit_before_wc) }}</td>
+                        </tr>
+
+                        <!-- Working Capital Changes -->
+                        <tr class="bg-light">
+                            <td colspan="3"><em>Changes in Working Capital:</em></td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Decrease/(Increase) in Inventories</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.inventories) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.prev_inventories) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Decrease/(Increase) in Trade Receivables</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.trade_receivables) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.prev_trade_receivables) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Decrease/(Increase) in Other Current Assets</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.other_current_assets) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.prev_other_current_assets) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Increase/(Decrease) in Trade Payables</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.trade_payables) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.prev_trade_payables) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Increase/(Decrease) in Other Current Liabilities</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.other_current_liabilities) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.working_capital.prev_other_current_liabilities) }}</td>
+                        </tr>
+                        
+                        <!-- Cash Generated and Taxes -->
+                        <tr class="font-weight-bold">
+                            <td>Cash Generated from Operations</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.cash_generated) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.prev_cash_generated) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Direct Taxes Paid (Net of Refunds)</td>
+                            <td class="text-right">({{ format_amount(cash_flow.operating_activities.direct_taxes|abs) }})</td>
+                            <td class="text-right">({{ format_amount(cash_flow.operating_activities.prev_direct_taxes|abs) }})</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td>Net Cash from Operating Activities (A)</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.net_cash) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.operating_activities.prev_net_cash) }}</td>
+                        </tr>
+
+                        <!-- B. Investing Activities -->
+                        <tr class="table-secondary">
+                            <td colspan="3"><strong>B. Cash Flow from Investing Activities</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Purchase of Fixed Assets (Tangible and Intangible)</td>
+                            <td class="text-right">({{ format_amount(cash_flow.investing_activities.fixed_assets_purchase|abs) }})</td>
+                            <td class="text-right">({{ format_amount(cash_flow.investing_activities.prev_fixed_assets_purchase|abs) }})</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Sale of Fixed Assets</td>
+                            <td class="text-right">{{ format_amount(cash_flow.investing_activities.fixed_assets_sale) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.investing_activities.prev_fixed_assets_sale) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Purchase of Investments</td>
+                            <td class="text-right">({{ format_amount(cash_flow.investing_activities.investments_made|abs) }})</td>
+                            <td class="text-right">({{ format_amount(cash_flow.investing_activities.prev_investments_made|abs) }})</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Interest Received</td>
+                            <td class="text-right">{{ format_amount(cash_flow.investing_activities.interest_received) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.investing_activities.prev_interest_received) }}</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td>Net Cash used in Investing Activities (B)</td>
+                            <td class="text-right">{{ format_amount(cash_flow.investing_activities.net_cash) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.investing_activities.prev_net_cash) }}</td>
+                        </tr>
+
+                        <!-- C. Financing Activities -->
+                        <tr class="table-secondary">
+                            <td colspan="3"><strong>C. Cash Flow from Financing Activities</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Proceeds from Equity (Share Capital, Reserves and Opening Retained Earnings)</td>
+                            <td class="text-right">{{ format_amount(cash_flow.financing_activities.share_capital_proceeds) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.financing_activities.prev_share_capital_proceeds) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Proceeds from Long Term Borrowings</td>
+                            <td class="text-right">{{ format_amount(cash_flow.financing_activities.long_term_borrowings) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.financing_activities.prev_long_term_borrowings) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Interest Paid</td>
+                            <td class="text-right">({{ format_amount(cash_flow.financing_activities.interest_paid|abs) }})</td>
+                            <td class="text-right">({{ format_amount(cash_flow.financing_activities.prev_interest_paid|abs) }})</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td>Net Cash from/(used in) Financing Activities (C)</td>
+                            <td class="text-right">{{ format_amount(cash_flow.financing_activities.net_cash) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.financing_activities.prev_net_cash) }}</td>
+                        </tr>
+
+                        <!-- Net Increase/Decrease in Cash -->
+                        <tr class="table-info font-weight-bold">
+                            <td>Net Increase/(Decrease) in Cash & Cash Equivalents (A+B+C)</td>
+                            <td class="text-right">{{ format_amount(cash_flow.net_change) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.prev_net_change) }}</td>
+                        </tr>
+                        <tr>
+                            <td>Cash and Cash Equivalents at the Beginning of the Year</td>
+                            <td class="text-right">{{ format_amount(cash_flow.cash_beginning) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.prev_cash_beginning) }}</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td>Cash and Cash Equivalents at the End of the Year</td>
+                            <td class="text-right">{{ format_amount(cash_flow.cash_ending) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.prev_cash_ending) }}</td>
+                        </tr>
+
+                        <!-- Components of Cash -->
+                        <tr class="bg-light">
+                            <td colspan="3"><em>Components of Cash and Cash Equivalents:</em></td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Cash on Hand</td>
+                            <td class="text-right">{{ format_amount(cash_flow.components.cash_on_hand) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.components.prev_cash_on_hand) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Balances with Banks in Current Accounts</td>
+                            <td class="text-right">{{ format_amount(cash_flow.components.current_accounts) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.components.prev_current_accounts) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="pl-4">Balances with Banks in Deposit Accounts</td>
+                            <td class="text-right">{{ format_amount(cash_flow.components.deposit_accounts) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.components.prev_deposit_accounts) }}</td>
+                        </tr>
+                        <tr class="font-weight-bold">
+                            <td>Total Cash and Cash Equivalents</td>
+                            <td class="text-right">{{ format_amount(cash_flow.components.total) }}</td>
+                            <td class="text-right">{{ format_amount(cash_flow.components.prev_total) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Notes:</h5>
+            <ol>
+                <li>The Cash Flow Statement has been prepared under the 'Indirect Method' as set out in Ind AS 7 - "Statement of Cash Flows".</li>
+                <li>Previous year's figures have been regrouped/reclassified wherever necessary to correspond with the current year's classification/disclosure.</li>
+                <li>Figures in brackets represent cash outflows.</li>
+            </ol>
+        </div>
+    </div>
+<!-- Signature Section -->
+<div class="row mt-5 mb-5">
+    <div class="col-md-6">
+        <p class="mb-0">For {{ client.audit_firm.name }}</p>
+        <p class="mb-0">Chartered Accountants</p>
+        <p class="mb-0">Firm Registration No: {{ client.audit_firm.frn }}</p>
+        <br>
+        <br>
+        <p class="mb-0"><strong>{{ client.audit_firm.auditor_name }}</strong></p>
+        <p class="mb-0">Partner</p>
+        <p class="mb-0">Membership No: {{ client.audit_firm.membership_no }}</p>
+        <p class="mb-0">UDIN: {{ client.audit_firm.udin }}</p>
+        <br>
+        <p class="mb-0">Place: {{ client.audit_firm.place }}</p>
+        <p class="mb-0">Date: {{ client.audit_firm.date|datetime }}</p>
+    </div>
+    <div class="col-md-6 text-right">
+        <p class="mb-0">For {{ client.legal_name }}</p>
+        <br>
+        <br>
+        <p class="mb-0"><strong>{{ client.signatory.name }}</strong></p>
+        <p class="mb-0">{{ client.signatory.designation }}</p>
+        <p class="mb-0">PAN: {{ client.signatory.pan }}</p>
+        <br>
+        <p class="mb-0">Place: {{ client.signatory.place }}</p>
+        <p class="mb-0">Date: {{ client.signatory.date|datetime }}</p>
+    </div>
+</div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+/* Table Styles */
+.table {
+    margin-bottom: 0;
+}
+.table td, .table th {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+.table-bordered td, .table-bordered th {
+    border: 1px solid #dee2e6;
+}
+.table .bg-light {
+    background-color: #f8f9fa !important;
+}
+.table .table-secondary {
+    background-color: #e9ecef;
+}
+.table .table-info {
+    background-color: #e3f2fd;
+}
+
+/* Spacing and Indentation */
+.pl-4 {
+    padding-left: 2rem !important;
+}
+
+/* Text Styles */
+.text-right {
+    text-align: right !important;
+}
+.font-weight-bold {
+    font-weight: 600 !important;
+}
+
+/* Card Styles */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* Header Styles */
+.page-header h2 {
+    margin-bottom: 0.25rem;
+    color: #2c3e50;
+}
+.page-header h3 {
+    color: #6c757d;
+    font-size: 1.25rem;
+}
+
+/* Button Styles */
+.btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+/* Notes Section */
+.card-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+ol li {
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+/* Signature Section */
+.signature-section p {
+    margin-bottom: 0.25rem;
+    line-height: 1.5;
+}
+
+/* Print Styles */
+@media print {
+    .btn-primary {
+        display: none;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: none;
+    }
+    
+    .table {
+        border-collapse: collapse;
+    }
+    
+    .table td, .table th {
+        background-color: white !important;
+        border-color: #000 !important;
+    }
+    
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    
+    .container-fluid {
+        padding: 0;
+        margin: 0;
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

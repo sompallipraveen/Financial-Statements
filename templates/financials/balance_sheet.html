@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-12 text-right">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a href="{{ url_for('financials.export_balance_sheet', client_id=client._id) }}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export to Excel
+            </a>
+            <a href="{{ url_for('financials.view_client_details', client_id=client._id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="balance-sheet">
+        <!-- Header Section -->
+        <div class="text-center mb-4">
+            <h3>{{ client.legal_name }}</h3>
+            <h4>Balance Sheet</h4>
+            <p class="mb-1">As at {{ balance_sheet_date.strftime('%B %d, %Y') }}</p>
+            <small class="text-muted">All amounts in INR {{ client.settings.rounding_amount }}, unless otherwise stated</small>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered balance-sheet-table">
+                <thead>
+                    <tr>
+                        <th width="40%">Particulars</th>
+                        <th width="10%">Note</th>
+                        <th width="25%">As at {{ balance_sheet_date.strftime('%B %d, %Y') }}</th>
+                        <th width="25%">As at {{ previous_year_date.strftime('%B %d, %Y') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- I. EQUITY AND LIABILITIES -->
+                    <tr class="section-header">
+                        <td colspan="4"><strong>I. EQUITY AND LIABILITIES</strong></td>
+                    </tr>
+                    
+                    <!-- 1. Equity -->
+                    <tr class="subsection-header">
+                        <td><strong>(1) Equity</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Share Capital</td>
+                        <td class="text-center">3</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.equity.equity_share_capital.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.equity.equity_share_capital.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Securities Premium</td>
+                        <td class="text-center">3</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.equity.securities_premium.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.equity.securities_premium.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">General Reserve</td>
+                        <td class="text-center">3</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.equity.general_reserve.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.equity.general_reserve.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Capital Reserve</td>
+                        <td class="text-center">3</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.equity.capital_reserve.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.equity.capital_reserve.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Opening Retained Earnings</td>
+                        <td class="text-center">3</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.equity.retained_earnings.opening_balance) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.equity.retained_earnings.opening_balance or 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="pl-4">Add: Profit for the year</td>
+                        <td class="text-center"></td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.equity.retained_earnings.current_year_profit) }}</td>
+                        <td class="text-right">-</td>
+                    </tr>
+                    <tr class="font-weight-bold">
+                        <td class="pl-4">Total Retained Earnings</td>
+                        <td></td>
+                        <td class="text-right border-top border-dark">{{ format_amount(balance_sheet.liabilities.equity.retained_earnings.total) }}</td>
+                        <td class="text-right border-top border-dark">{{ format_amount(previous_balance_sheet.liabilities.equity.retained_earnings.total or 0) }}</td>
+                    </tr>
+
+                    <tr class="total-row">
+                        <td class="pl-4">Total Equity</td>
+                        <td></td>
+                        <td class="text-right border-top border-dark">{{ format_amount(balance_sheet.liabilities.equity.total) }}</td>
+                        <td class="text-right border-top border-dark">{{ format_amount(previous_balance_sheet.liabilities.equity.total) }}</td>
+                    </tr>
+
+                    <!-- 2. Non-Current Liabilities -->
+                    <tr class="subsection-header">
+                        <td><strong>(2) Non-Current Liabilities</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Secured Loans</td>
+                        <td class="text-center">4</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.long_term_liabilities.secured_loans.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.long_term_liabilities.secured_loans.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Unsecured Loans</td>
+                        <td class="text-center">4</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.long_term_liabilities.unsecured_loans.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.long_term_liabilities.unsecured_loans.total) }}</td>
+                    </tr>
+
+                    <tr class="total-row">
+                        <td class="pl-4">Total Non-Current Liabilities</td>
+                        <td></td>
+                        <td class="text-right border-top border-dark">{{ format_amount(balance_sheet.liabilities.long_term_liabilities.total) }}</td>
+                        <td class="text-right border-top border-dark">{{ format_amount(previous_balance_sheet.liabilities.long_term_liabilities.total) }}</td>
+                    </tr>
+
+                    <!-- 3. Current Liabilities -->
+                    <tr class="subsection-header">
+                        <td><strong>(3) Current Liabilities</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Trade Payables - MSME</td>
+                        <td class="text-center">5</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.current_liabilities.msme_payables.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.current_liabilities.msme_payables.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Trade Payables - Others</td>
+                        <td class="text-center">5</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.current_liabilities.other_payables.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.current_liabilities.other_payables.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Statutory Dues</td>
+                        <td class="text-center">6</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.current_liabilities.statutory_dues.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.current_liabilities.statutory_dues.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Short Term Borrowings</td>
+                        <td class="text-center">6</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.current_liabilities.short_term_borrowings.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.current_liabilities.short_term_borrowings.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Other Current Liabilities</td>
+                        <td class="text-center">6</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.liabilities.current_liabilities.other_current_liabilities.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.liabilities.current_liabilities.other_current_liabilities.total) }}</td>
+                    </tr>
+
+                    <tr class="total-row">
+                        <td class="pl-4">Total Current Liabilities</td>
+                        <td></td>
+                        <td class="text-right border-top border-dark">{{ format_amount(balance_sheet.liabilities.current_liabilities.total) }}</td>
+                        <td class="text-right border-top border-dark">{{ format_amount(previous_balance_sheet.liabilities.current_liabilities.total) }}</td>
+                    </tr>
+
+                    <!-- Total Equity and Liabilities -->
+                    <tr class="total-section">
+                        <td><strong>TOTAL EQUITY AND LIABILITIES</strong></td>
+                        <td></td>
+                        <td class="text-right">{{ format_amount(balance_sheet.total_liabilities) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.total_liabilities) }}</td>
+                    </tr>
+
+                    <!-- II. ASSETS -->
+                    <tr class="section-header">
+                        <td colspan="4"><strong>II. ASSETS</strong></td>
+                    </tr>
+
+                    <!-- 1. Non-Current Assets -->
+                    <tr class="subsection-header">
+                        <td><strong>(1) Non-Current Assets</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+
+                    <!-- Fixed Assets -->
+                    <tr>
+                        <td class="pl-4">Tangible Assets</td>
+                        <td class="text-center">7</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.fixed_assets.tangible_assets.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.fixed_assets.tangible_assets.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Intangible Assets</td>
+                        <td class="text-center">7</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.fixed_assets.intangible_assets.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.fixed_assets.intangible_assets.total) }}</td>
+                    </tr>
+
+                    <tr class="total-row">
+                        <td class="pl-4">Total Fixed Assets</td>
+                        <td></td>
+                        <td class="text-right border-top border-dark">{{ format_amount(balance_sheet.assets.fixed_assets.total) }}</td>
+                        <td class="text-right border-top border-dark">{{ format_amount(previous_balance_sheet.assets.fixed_assets.total) }}</td>
+                    </tr>
+
+                    <!-- Investments -->
+                    <tr>
+                        <td class="pl-4">Long Term Investments</td>
+                        <td class="text-center">8</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.investments.long_term_investments.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.investments.long_term_investments.total) }}</td>
+                    </tr>
+
+                    <!-- 2. Current Assets -->
+                    <tr class="subsection-header">
+                        <td><strong>(2) Current Assets</strong></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Short Term Investments</td>
+                        <td class="text-center">8</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.investments.short_term_investments.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.investments.short_term_investments.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Inventories</td>
+                        <td class="text-center">9</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.current_assets.inventories.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.current_assets.inventories.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Trade Receivables</td>
+                        <td class="text-center">10</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.current_assets.trade_receivables.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.current_assets.trade_receivables.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Cash and Cash Equivalents</td>
+                        <td class="text-center">11</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.current_assets.cash_and_equivalents.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.current_assets.cash_and_equivalents.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Loans and Advances</td>
+                        <td class="text-center">12</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.current_assets.loans_and_advances.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.current_assets.loans_and_advances.total) }}</td>
+                    </tr>
+
+                    <tr>
+                        <td class="pl-4">Other Current Assets</td>
+                        <td class="text-center">12</td>
+                        <td class="text-right">{{ format_amount(balance_sheet.assets.current_assets.other_current_assets.total) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.assets.current_assets.other_current_assets.total) }}</td>
+                    </tr>
+
+                    <tr class="total-row">
+                        <td class="pl-4">Total Current Assets</td>
+                        <td></td>
+                        <td class="text-right border-top border-dark">{{ format_amount(balance_sheet.assets.current_assets.total) }}</td>
+                        <td class="text-right border-top border-dark">{{ format_amount(previous_balance_sheet.assets.current_assets.total) }}</td>
+                    </tr>
+
+                    <!-- Total Assets -->
+                    <tr class="total-section">
+                        <td><strong>TOTAL ASSETS</strong></td>
+                        <td></td>
+                        <td class="text-right">{{ format_amount(balance_sheet.total_assets) }}</td>
+                        <td class="text-right">{{ format_amount(previous_balance_sheet.total_assets) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Signatures Section -->
+        <div class="mt-4">
+            <p>The accompanying notes are an integral part of the Financial Statements</p>
+            <p>As per our report of even date attached</p>
+            
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <p>For {{ client.audit_firm.name }}</p>
+                    <p>Chartered Accountants</p>
+                    <p>Firm Regn No: {{ client.audit_firm.frn }}</p>
+                    <br><br>
+                    <p>{{ client.audit_firm.auditor_name }}</p>
+                    <p>Partner</p>
+                    <p>Membership No: {{ client.audit_firm.membership_no }}</p>
+                    <p>UDIN: {{ client.audit_firm.udin }}</p>
+                    <p>Place: {{ client.audit_firm.place }}</p>
+                    <p>Date: {{ format_date(client.audit_firm.date) }}</p>
+                </div>
+                <div class="col-md-6 text-right">
+                    <p>For {{ client.legal_name }}</p>
+                    <br><br><br>
+                    <p>{{ client.signatory.name }}</p>
+                    <p>{{ client.signatory.designation }}</p>
+                    <p>PAN: {{ client.signatory.pan }}</p>
+                    <p>Place: {{ client.signatory.place }}</p>
+                    <p>Date: {{ format_date(client.signatory.date) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="fixed-bottom mb-4 mr-4" style="right: 0;">
+    <a href="{{ url_for('financials.view_balance_sheet_notes', client_id=client._id) }}" class="btn btn-info">
+        <i class="fas fa-list"></i> View Notes
+    </a>
+</div>
+
+<style>
+.balance-sheet {
+    font-size: 14px;
+}
+
+.balance-sheet-table {
+    border: 1px solid #dee2e6;
+}
+
+.section-header {
+    background-color: #f8f9fa;
+}
+
+.subsection-header {
+    background-color: #ffffff;
+}
+
+.total-section {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.total-row {
+    background-color: #ffffff;
+    font-weight: bold;
+}
+
+.pl-4 {
+    padding-left: 1.5rem !important;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.border-top {
+    border-top: 1px solid #dee2e6 !important;
+}
+
+.border-dark {
+    border-color: #343a40 !important;
+}
+
+@media print {
+    .btn {
+        display: none;
+    }
+    
+    .balance-sheet {
+        font-size: 12px;
+    }
+    
+    .fixed-bottom {
+        display: none;
+    }
+    
+    @page {
+        size: A4;
+        margin: 1cm;
+    }
+
+    .table th {
+        background-color: #f8f9fa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .section-header, .total-section {
+        background-color: #f8f9fa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    tr, td, th {
+        page-break-inside: avoid;
+    }
+
+    .page-break-after {
+        page-break-after: always;
+    }
+}
+
+/* Additional improvements */
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.table thead th {
+    border-bottom: 2px solid #dee2e6;
+}
+
+.section-header td {
+    padding-top: 1rem;
+}
+
+.subsection-header td {
+    padding-top: 0.75rem;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: none;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+/* Button hover effects */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .balance-sheet {
+        font-size: 12px;
+    }
+    
+    .table td, .table th {
+        padding: 0.5rem;
+    }
+    
+    .pl-4 {
+        padding-left: 1rem !important;
+    }
+}
+</style>
+
+<script>
+// Add smooth scrolling to View Notes button
+document.querySelector('a[href*="view_balance_sheet_notes"]').addEventListener('click', function(e) {
+    e.preventDefault();
+    const href = this.getAttribute('href');
+    window.location.href = href;
+});
+
+// Print button functionality
+document.querySelector('button[onclick="window.print()"]').addEventListener('click', function() {
+    window.print();
+});
+</script>
+{% endblock %}

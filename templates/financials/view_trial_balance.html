@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .input-group .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-left: none;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    /* Animation for search results */
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    /* Highlight searched text */
+    .highlight {
+        background-color: #fff3cd;
+    }
+    
+    /* Export button styles */
+    .btn-success:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+    </style>
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>Trial Balance</h2>
+                <p class="text-muted">
+                    {{ client.company_name }} - FY {{ client.fiscal_year }}
+                    <span class="badge badge-info">Uploaded on: {{ trial_balance.uploaded_at.strftime('%Y-%m-%d %H:%M') if trial_balance.uploaded_at else 'N/A' }}</span>
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('financials.financial_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> BACK TO DASHBOARD
+                </a>
+                <button class="btn btn-success" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> EXPORT TO EXCEL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Total Debit</h6>
+                    <h3>₹{{ "{:,.2f}".format(trial_balance.total_debit) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Total Credit</h6>
+                    <h3>₹{{ "{:,.2f}".format(trial_balance.total_credit) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>Total Accounts</h6>
+                    <h3>{{ trial_balance.data|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6>Difference</h6>
+                    <h3>₹{{ "{:,.2f}".format(trial_balance.total_debit - trial_balance.total_credit) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- In view_trial_balance.html, add this button -->
+<a href="{{ url_for('financials.generate_financial_statements', client_id=client._id) }}"
+class="btn btn-primary ml-2">
+ <i class="fas fa-chart-line"></i> Generate Financial Statements
+</a>
+
+    <!-- Trial Balance Details -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Trial Balance Details</h5>
+            <div class="input-group" style="width: 300px;">
+                <input type="text" class="form-control" id="searchAccounts" 
+                       placeholder="Search accounts...">
+                <div class="input-group-append">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover" id="trialBalanceTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)" class="sortable">Account Code <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable(1)" class="sortable">Account Name <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable(2)" class="sortable text-right">Debit <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable(3)" class="sortable text-right">Credit <i class="fas fa-sort"></i></th>
+                            <th onclick="sortTable(4)" class="sortable">Account Type <i class="fas fa-sort"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in trial_balance.data %}
+                        <tr>
+                            <td>{{ item.Account_Code }}</td>
+                            <td>{{ item.Account_Name }}</td>
+                            <td class="text-right">{{ "{:,.2f}".format(item.Debit) }}</td>
+                            <td class="text-right">{{ "{:,.2f}".format(item.Credit) }}</td>
+                            <td>
+                                <span class="badge badge-{{ 
+                                    'primary' if item.Account_Type == 'Asset' else
+                                    'success' if item.Account_Type == 'Liability' else
+                                    'info' if item.Account_Type == 'Equity' else
+                                    'warning' if item.Account_Type == 'Revenue' else
+                                    'danger' if item.Account_Type == 'Expense' else
+                                    'secondary' 
+                                }}">
+                                    {{ item.Account_Type }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold bg-light">
+                            <td colspan="2">Total</td>
+                            <td class="text-right">{{ "{:,.2f}".format(trial_balance.total_debit) }}</td>
+                            <td class="text-right">{{ "{:,.2f}".format(trial_balance.total_credit) }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+.sortable {
+    cursor: pointer;
+}
+.sortable:hover {
+    background-color: #f8f9fa;
+}
+.badge {
+    font-size: 85%;
+}
+.table td {
+    vertical-align: middle;
+}
+</style>
+
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    let searchText = this.value.toLowerCase();
+    let table = document.getElementById('trialBalanceTable');
+    let rows = table.getElementsByTagName('tr');
+
+    for (let row of rows) {
+        if (row.parentNode.tagName === 'TBODY') {
+            let showRow = false;
+            let cells = row.getElementsByTagName('td');
+            
+            for (let cell of cells) {
+                if (cell.textContent.toLowerCase().includes(searchText)) {
+                    showRow = true;
+                    break;
+                }
+            }
+            
+            row.style.display = showRow ? '' : 'none';
+        }
+    }
+});
+
+// Sorting functionality
+function sortTable(columnIndex) {
+    let table = document.getElementById('trialBalanceTable');
+    let rows = Array.from(table.getElementsByTagName('tr'));
+    let tbody = table.getElementsByTagName('tbody')[0];
+    let switching = true;
+    let shouldSwitch = false;
+    let direction = 'asc';
+    let switchcount = 0;
+
+    while (switching) {
+        switching = false;
+        rows = tbody.rows;
+
+        for (let i = 0; i < (rows.length - 1); i++) {
+            shouldSwitch = false;
+            let x = rows[i].getElementsByTagName('td')[columnIndex];
+            let y = rows[i + 1].getElementsByTagName('td')[columnIndex];
+            
+            let xValue = x.textContent.trim();
+            let yValue = y.textContent.trim();
+            
+            // Handle numeric columns (debit/credit)
+            if (columnIndex === 2 || columnIndex === 3) {
+                xValue = parseFloat(xValue.replace(/[^0-9.-]+/g, ''));
+                yValue = parseFloat(yValue.replace(/[^0-9.-]+/g, ''));
+            }
+
+            if (direction === 'asc') {
+                if (xValue > yValue) {
+                    shouldSwitch = true;
+                    break;
+                }
+            } else {
+                if (xValue < yValue) {
+                    shouldSwitch = true;
+                    break;
+                }
+            }
+        }
+
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+            switchcount++;
+        } else {
+            if (switchcount === 0 && direction === 'asc') {
+                direction = 'desc';
+                switching = true;
+            }
+        }
+    }
+}
+
+// Export to Excel functionality
+function exportToExcel() {
+    // Create workbook
+    let wb = XLSX.utils.book_new();
+    
+    // Get table data
+    let table = document.getElementById('trialBalanceTable');
+    let ws = XLSX.utils.table_to_sheet(table);
+    
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Trial Balance');
+    
+    // Generate Excel file and trigger download
+    XLSX.writeFile(wb, '{{ client.company_name }}_trial_balance.xlsx');
+}
+</script>
+
+
+<script>
+// Search functionality
+document.getElementById('searchAccounts').addEventListener('keyup', function() {
+    const searchText = this.value.toLowerCase();
+    const table = document.getElementById('trialBalanceTable');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.parentNode.tagName === 'TBODY') {
+            const cells = row.getElementsByTagName('td');
+            let found = false;
+            
+            // Search in Account Code and Account Name (first two columns)
+            for (let j = 0; j < 2; j++) {
+                const cellText = cells[j].textContent || cells[j].innerText;
+                if (cellText.toLowerCase().indexOf(searchText) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            row.style.display = found ? '' : 'none';
+        }
+    }
+});
+
+// Export to Excel functionality
+function exportToExcel() {
+    // Get the table data
+    const table = document.getElementById('trialBalanceTable');
+    let wb = XLSX.utils.book_new();
+    
+    // Get company name and fiscal year
+    const companyName = document.querySelector('.page-header h2').textContent;
+    const fiscalYear = document.querySelector('.page-header .text-muted').textContent;
+    
+    // Create worksheet from table
+    let ws = XLSX.utils.table_to_sheet(table);
+    
+    // Add header styling
+    const header = [
+        [companyName],
+        [fiscalYear],
+        ['Trial Balance'],
+        [] // Empty row for spacing
+    ];
+    
+    // Add headers to beginning of worksheet
+    XLSX.utils.sheet_add_aoa(ws, header, { origin: 'A1' });
+    
+    // Auto-size columns
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    const cols = [];
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+        let maximum = 0;
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            const cell = ws[XLSX.utils.encode_cell({r: R, c: C})];
+            if (cell && cell.v) {
+                const length = cell.v.toString().length;
+                if (length > maximum) maximum = length;
+            }
+        }
+        cols[C] = { wch: maximum + 2 }; // Add padding
+    }
+    ws['!cols'] = cols;
+    
+    // Add the worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Trial Balance');
+    
+    // Generate filename from company name and date
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `${companyName.trim()}_Trial_Balance_${date}.xlsx`;
+    
+    // Save the file
+    XLSX.writeFile(wb, filename);
+}
+
+// Load SheetJS library
+function loadSheetJS() {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = function() {
+        // Enable export button once library is loaded
+        document.querySelector('button[onclick="exportToExcel()"]').disabled = false;
+    };
+    document.head.appendChild(script);
+}
+
+// Load SheetJS when page loads
+document.addEventListener('DOMContentLoaded', loadSheetJS);
+</script>
+{% endblock %}

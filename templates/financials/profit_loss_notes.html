@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>{{ client.legal_name }}</h2>
+                <h3>Notes to Statement of Profit And Loss</h3>
+                <p class="text-muted">Year ended March 31, {{ client.fiscal_year }}</p>
+                <small class="text-muted">All amounts in INR {{ client.settings.rounding_amount }}, unless otherwise stated</small>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes -->
+    <!-- Note 12: Revenue from Operations -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ notes.note_12.title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Particulars</th>
+                            <th class="text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in notes.note_12.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="total">
+                            <td><strong>Total Revenue from Operations</strong></td>
+                            <td class="text-right"><strong>{{ format_amount(notes.note_12.total|abs) }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note 13: Other Income -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ notes.note_13.title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Particulars</th>
+                            <th class="text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in notes.note_13.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="total">
+                            <td><strong>Total Other Income</strong></td>
+                            <td class="text-right"><strong>{{ format_amount(notes.note_13.total|abs) }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note 14: Cost of Materials -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ notes.note_14.title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Particulars</th>
+                            <th class="text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in notes.note_14.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="total">
+                            <td><strong>Total Cost of Materials</strong></td>
+                            <td class="text-right"><strong>{{ format_amount(notes.note_14.total|abs) }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Note 15: Employee Benefits Expense -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ notes.note_15.title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Particulars</th>
+                            <th class="text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Salaries and Wages -->
+                        {% for item in notes.note_15.sub_categories.salaries_and_wages.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td class="pl-4"><em>Sub-total: Salaries and Wages</em></td>
+                            <td class="text-right">{{ format_amount(notes.note_15.sub_categories.salaries_and_wages.total|abs) }}</td>
+                        </tr>
+
+                        <!-- Staff Welfare -->
+                        {% for item in notes.note_15.sub_categories.staff_welfare.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td class="pl-4"><em>Sub-total: Staff Welfare Expenses</em></td>
+                            <td class="text-right">{{ format_amount(notes.note_15.sub_categories.staff_welfare.total|abs) }}</td>
+                        </tr>
+
+                        <!-- Bonus -->
+                        {% for item in notes.note_15.sub_categories.bonus.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td class="pl-4"><em>Sub-total: Bonus</em></td>
+                            <td class="text-right">{{ format_amount(notes.note_15.sub_categories.bonus.total|abs) }}</td>
+                        </tr>
+
+                        <tr class="total">
+                            <td><strong>Total Employee Benefits Expense</strong></td>
+                            <td class="text-right"><strong>{{ format_amount(notes.note_15.total|abs) }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note 16: Finance Costs -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ notes.note_16.title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Particulars</th>
+                            <th class="text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Interest Expense -->
+                        {% for item in notes.note_16.sub_categories.interest_expense.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td class="pl-4"><em>Sub-total: Interest Expense</em></td>
+                            <td class="text-right">{{ format_amount(notes.note_16.sub_categories.interest_expense.total|abs) }}</td>
+                        </tr>
+
+                        <!-- Bank Charges -->
+                        {% for item in notes.note_16.sub_categories.bank_charges.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td class="pl-4"><em>Sub-total: Bank Charges</em></td>
+                            <td class="text-right">{{ format_amount(notes.note_16.sub_categories.bank_charges.total|abs) }}</td>
+                        </tr>
+
+                        <!-- Other Borrowing Costs -->
+                        {% for item in notes.note_16.sub_categories.other_borrowing_costs.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td class="pl-4"><em>Sub-total: Other Borrowing Costs</em></td>
+                            <td class="text-right">{{ format_amount(notes.note_16.sub_categories.other_borrowing_costs.total|abs) }}</td>
+                        </tr>
+
+                        <tr class="total">
+                            <td><strong>Total Finance Costs</strong></td>
+                            <td class="text-right"><strong>{{ format_amount(notes.note_16.total|abs) }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note 17: Other Expenses -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">{{ notes.note_17.title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Particulars</th>
+                            <th class="text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in notes.note_17.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount|abs) }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="total">
+                            <td><strong>Total Other Expenses</strong></td>
+                            <td class="text-right"><strong>{{ format_amount(notes.note_17.total|abs) }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Existing styles remain the same */
+.table th {
+    background-color: #f8f9fa;
+}
+.table td, .table th {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+.total {
+    background-color: #f8f9fa;
+}
+.page-header h2 {
+    margin-bottom: 0.25rem;
+}
+.page-header h3 {
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}
+
+/* New styles for sub-categories */
+.pl-4 {
+    padding-left: 2rem !important;
+}
+
+@media print {
+    .btn {
+        display: none;
+    }
+    .card {
+        border: none;
+    }
+    .card-header {
+        background-color: transparent;
+    }
+    @page {
+        margin: 1cm;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,557 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-md-12 text-right">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a href="{{ url_for('financials.export_balance_sheet', client_id=client._id) }}" class="btn btn-success">
+                <i class="fas fa-file-excel"></i> Export to Excel
+            </a>
+            <a href="{{ url_for('financials.generate_balance_sheet_view', client_id=client._id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="notes-section">
+        <!-- Header Section -->
+        <div class="text-center mb-4">
+            <h3>{{ client.legal_name }}</h3>
+            <h4>Notes to Balance Sheet</h4>
+            <p class="mb-1">As at {{ balance_sheet_date.strftime('%B %d, %Y') }}</p>
+            <small class="text-muted">All amounts in INR {{ client.settings.rounding_amount }}, unless otherwise stated</small>
+        </div>
+
+        <!-- Note 3: Share Capital and Reserves -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ notes.note_3.title }}</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ notes.note_3.share_capital.title }}</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in notes.note_3.share_capital.entries %}
+                            <tr>
+                                <td>{{ item.account }}</td>
+                                <td class="text-right">{{ format_amount(item.amount) }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="subtotal">
+                                <td>Total Share Capital (A)</td>
+                                <td class="text-right">{{ format_amount(notes.note_3.share_capital.total) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6>{{ notes.note_3.reserves.title }}</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, data in notes.note_3.reserves.sub_categories.items() %}
+                                {% if category == 'retained_earnings' %}
+                                    <tr>
+                                        <td colspan="2"><strong>{{ data.title }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pl-4">Opening Balance</td>
+                                        <td class="text-right">{{ format_amount(data.opening_balance) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pl-4">Add: Profit for the year</td>
+                                        <td class="text-right">{{ format_amount(data.current_year_profit) }}</td>
+                                    </tr>
+                                    <tr class="subtotal">
+                                        <td class="pl-4">Total Retained Earnings</td>
+                                        <td class="text-right">{{ format_amount(data.total) }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="2"><strong>{{ data.title }}</strong></td>
+                                    </tr>
+                                    {% for item in data.entries %}
+                                    <tr>
+                                        <td class="pl-4">{{ item.account }}</td>
+                                        <td class="text-right">{{ format_amount(item.amount) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="subtotal">
+                                        <td class="pl-4">Total {{ data.title }}</td>
+                                        <td class="text-right">{{ format_amount(data.total) }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                            <tr class="total">
+                                <td><strong>Total Reserves and Surplus (B)</strong></td>
+                                <td class="text-right"><strong>{{ format_amount(notes.note_3.reserves.total) }}</strong></td>
+                            </tr>
+                            <tr class="grand-total">
+                                <td><strong>Total Shareholders' Funds (A + B)</strong></td>
+                                <td class="text-right"><strong>{{ format_amount(notes.note_3.total) }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Note 4: Long Term Borrowings -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ notes.note_4.title }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, data in notes.note_4.sub_categories.items() %}
+                                <tr class="category-header">
+                                    <td colspan="2">{{ data.title }}</td>
+                                </tr>
+                                {% for item in data.entries %}
+                                <tr>
+                                    <td class="pl-4">{{ item.account }}</td>
+                                    <td class="text-right">{{ format_amount(item.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="subtotal">
+                                    <td class="pl-4">Total {{ data.title }}</td>
+                                    <td class="text-right">{{ format_amount(data.total) }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="total">
+                                <td><strong>Total Long Term Borrowings</strong></td>
+                                <td class="text-right"><strong>{{ format_amount(notes.note_4.total) }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Note 5: Trade Payables -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ notes.note_5.title }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, data in notes.note_5.sub_categories.items() %}
+                                <tr class="category-header">
+                                    <td colspan="2">{{ data.title }}</td>
+                                </tr>
+                                {% for item in data.entries %}
+                                <tr>
+                                    <td class="pl-4">{{ item.account }}</td>
+                                    <td class="text-right">{{ format_amount(item.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="subtotal">
+                                    <td class="pl-4">Total {{ data.title }}</td>
+                                    <td class="text-right">{{ format_amount(data.total) }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="total">
+                                <td><strong>Total Trade Payables</strong></td>
+                                <td class="text-right"><strong>{{ format_amount(notes.note_5.total) }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Note 6: Other Current Liabilities -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ notes.note_6.title }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, data in notes.note_6.sub_categories.items() %}
+                                <tr class="category-header">
+                                    <td colspan="2">{{ data.title }}</td>
+                                </tr>
+                                {% for item in data.entries %}
+                                <tr>
+                                    <td class="pl-4">{{ item.account }}</td>
+                                    <td class="text-right">{{ format_amount(item.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="subtotal">
+                                    <td class="pl-4">Total {{ data.title }}</td>
+                                    <td class="text-right">{{ format_amount(data.total) }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="total">
+                                <td><strong>Total Other Current Liabilities</strong></td>
+                                <td class="text-right"><strong>{{ format_amount(notes.note_6.total) }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Note 7: Fixed Assets -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ notes.note_7.title }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, data in notes.note_7.sub_categories.items() %}
+                                <tr class="category-header">
+                                    <td colspan="2">{{ data.title }}</td>
+                                </tr>
+                                {% for item in data.entries %}
+                                <tr>
+                                    <td class="pl-4">{{ item.account }}</td>
+                                    <td class="text-right">{{ format_amount(item.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="subtotal">
+                                    <td class="pl-4">Total {{ data.title }}</td>
+                                    <td class="text-right">{{ format_amount(data.total) }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="total">
+                                <td><strong>Total Fixed Assets</strong></td>
+                                <td class="text-right"><strong>{{ format_amount(notes.note_7.total) }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+<!-- Note 8: Investments -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">{{ notes.note_8.title }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if notes.note_8.sub_categories is defined %}
+                        {% for category, data in notes.note_8.sub_categories.items() %}
+                            <tr class="category-header">
+                                <td colspan="2">{{ data.title }}</td>
+                            </tr>
+                            {% for item in data.entries %}
+                            <tr>
+                                <td class="pl-4">{{ item.account }}</td>
+                                <td class="text-right">{{ format_amount(item.amount) }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="subtotal">
+                                <td class="pl-4">Total {{ data.title }}</td>
+                                <td class="text-right">{{ format_amount(data.total) }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for item in notes.note_8.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                    <tr class="total">
+                        <td><strong>Total Investments</strong></td>
+                        <td class="text-right"><strong>{{ format_amount(notes.note_8.total) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Note 9: Inventories -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">{{ notes.note_9.title }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in notes.note_9.entries %}
+                    <tr>
+                        <td>{{ item.account }}</td>
+                        <td class="text-right">{{ format_amount(item.amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total">
+                        <td><strong>Total Inventories</strong></td>
+                        <td class="text-right"><strong>{{ format_amount(notes.note_9.total) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Note 10: Trade Receivables -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">{{ notes.note_10.title }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in notes.note_10.entries %}
+                    <tr>
+                        <td>{{ item.account }}</td>
+                        <td class="text-right">{{ format_amount(item.amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total">
+                        <td><strong>Total Trade Receivables</strong></td>
+                        <td class="text-right"><strong>{{ format_amount(notes.note_10.total) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Note 11: Cash and Cash Equivalents -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">{{ notes.note_11.title }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in notes.note_11.entries %}
+                    <tr>
+                        <td>{{ item.account }}</td>
+                        <td class="text-right">{{ format_amount(item.amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total">
+                        <td><strong>Total Cash and Cash Equivalents</strong></td>
+                        <td class="text-right"><strong>{{ format_amount(notes.note_11.total) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Note 12: Other Current Assets -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">{{ notes.note_12.title }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if notes.note_12.sub_categories is defined %}
+                        {% for category, data in notes.note_12.sub_categories.items() %}
+                            <tr class="category-header">
+                                <td colspan="2">{{ data.title }}</td>
+                            </tr>
+                            {% for item in data.entries %}
+                            <tr>
+                                <td class="pl-4">{{ item.account }}</td>
+                                <td class="text-right">{{ format_amount(item.amount) }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="subtotal">
+                                <td class="pl-4">Total {{ data.title }}</td>
+                                <td class="text-right">{{ format_amount(data.total) }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for item in notes.note_12.entries %}
+                        <tr>
+                            <td>{{ item.account }}</td>
+                            <td class="text-right">{{ format_amount(item.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                    <tr class="total">
+                        <td><strong>Total Other Current Assets</strong></td>
+                        <td class="text-right"><strong>{{ format_amount(notes.note_12.total) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<style>
+.notes-section {
+    font-size: 14px;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+.table td, .table th {
+    padding: 0.75rem;
+    vertical-align: top;
+    border: 1px solid #dee2e6;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.subtotal {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+.total {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+@media print {
+    .btn {
+        display: none;
+    }
+    
+    .notes-section {
+        font-size: 12px;
+    }
+    
+    @page {
+        size: A4;
+        margin: 1cm;
+    }
+}
+/* Existing styles remain */
+.category-header {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+.grand-total {
+    background-color: #e9ecef;
+    font-weight: bold;
+}
+
+/* Add more specific styles for subcategories if needed */
+.subcategory {
+    padding-left: 1.5rem;
+}
+.notes-section {
+    font-size: 14px;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+
+</style>
+{% endblock %}
