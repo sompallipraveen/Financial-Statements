@@ -32,6 +32,7 @@ from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment, Border, Si
 from openpyxl.utils import get_column_letter
 import traceback
 from dotenv import load_dotenv
+
 # Create Blueprint
 financials = Blueprint('financials', __name__, url_prefix='/financials')
 
@@ -170,10 +171,12 @@ def format_datetime(value):
 def financial_dashboard():
     try:
         db = get_db()
+        # Get role from session first
+        role = session.get('role', 'user')  # Default to 'user' if not set
+        
         # Fetch only clients belonging to the logged-in user
         clients = list(db.financial_clients.find(
             {'user_id': session['user_id']},
-            # Specify the fields we want to retrieve
             {
                 'company_name': 1,
                 'legal_name': 1,
@@ -187,11 +190,15 @@ def financial_dashboard():
         for client in clients:
             client['company_name'] = client.get('legal_name') or client.get('company_name') or 'Unnamed Client'
 
-        return render_template('financials/dashboard.html', clients=clients)
+        return render_template(
+            'financials/dashboard.html', 
+            clients=clients,
+            role=role
+        )
     except Exception as e:
+        print(f"Error in financial_dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
         return redirect(url_for('login'))
-
 import re
 from datetime import datetime
 from bson import ObjectId
@@ -4149,30 +4156,43 @@ def export_all_financials_complete(client_id):
         pl[f'C{pl_row}'].style = number_style
         pl_row += 1
 
-        # Finance costs
-        pl[f'A{pl_row}'] = "(c) Finance costs"
+        # Depreciation and amortization expense - Added this section
+        pl[f'A{pl_row}'] = "(c) Depreciation and amortisation expense"
         pl[f'B{pl_row}'] = "16"
+        pl[f'C{pl_row}'] = profit_loss_data['expenses']['depreciation']
+        pl[f'C{pl_row}'].style = number_style
+        pl_row += 1
+
+        # Finance costs - Updated note number after adding depreciation
+        pl[f'A{pl_row}'] = "(d) Finance costs"
+        pl[f'B{pl_row}'] = "17"
         pl[f'C{pl_row}'] = profit_loss_data['expenses']['finance_costs']
         pl[f'C{pl_row}'].style = number_style
         pl_row += 1
 
-        # Other expenses
-        pl[f'A{pl_row}'] = "(d) Other expenses"
-        pl[f'B{pl_row}'] = "17"
+        # Other expenses - Updated note number after adding depreciation
+        pl[f'A{pl_row}'] = "(e) Other expenses"
+        pl[f'B{pl_row}'] = "18"
         pl[f'C{pl_row}'] = profit_loss_data['expenses']['other_expenses']
         pl[f'C{pl_row}'].style = number_style
         pl_row += 1
 
         # Total Expenses
         pl[f'A{pl_row}'] = "Total Expenses"
-        total_expenses = profit_loss_data['expenses']['total_expenses']
+        total_expenses = (
+            profit_loss_data['expenses']['cost_of_materials'] +
+            profit_loss_data['expenses']['employee_benefits'] +
+            profit_loss_data['expenses']['depreciation'] +  # Added depreciation to total
+            profit_loss_data['expenses']['finance_costs'] +
+            profit_loss_data['expenses']['other_expenses']
+        )
         pl[f'C{pl_row}'] = total_expenses
         pl[f'C{pl_row}'].style = number_style
         pl_row += 2
 
         # III. Profit before tax
         pl[f'A{pl_row}'] = "III. Profit before tax (I - II)"
-        pl[f'C{pl_row}'] = profit_loss_data['profit_before_tax']
+        pl[f'C{pl_row}'] = total_income - total_expenses  # Updated to use calculated totals
         pl[f'C{pl_row}'].style = number_style
         pl_row += 2
 
