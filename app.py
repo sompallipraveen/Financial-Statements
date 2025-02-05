@@ -1655,9 +1655,6 @@ def add_audit_task(client_id):
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         
-        if not start_date or not end_date:
-            return jsonify({"success": False, "error": "Period dates are required"}), 400
-
         task_data = {
             "_id": ObjectId(),
             "task_name": request.form.get("task_name"),
@@ -1666,10 +1663,22 @@ def add_audit_task(client_id):
             "comments": request.form.get("comments"),
             "status": request.form.get("status"),
             "allocated_team_member": request.form.get("allocated_team_member"),
+            "due_date": request.form.get("due_date"),  # Add this line
             "created_at": datetime.now(),
             "updated_at": datetime.now()
         }
         
+        # Validate due date is within audit period
+        due_date = datetime.strptime(task_data["due_date"], '%Y-%m-%d')
+        audit_start = datetime.strptime(start_date, '%Y-%m-%d')
+        audit_end = datetime.strptime(end_date, '%Y-%m-%d')
+        
+        if not (audit_start <= due_date <= audit_end):
+            return jsonify({
+                "success": False,
+                "error": "Due date must be within the audit period"
+            }), 400
+
         scope_area = request.form.get("scope_area")
 
         # Add task to dynamic collection
@@ -1689,7 +1698,8 @@ def add_audit_task(client_id):
         if result.modified_count > 0:
             return jsonify({
                 "success": True, 
-                "task_id": str(task_data["_id"])
+                "task_id": str(task_data["_id"]),
+                "message": "Task added successfully"
             })
         else:
             return jsonify({
@@ -1699,7 +1709,10 @@ def add_audit_task(client_id):
 
     except Exception as e:
         logging.error(f"Error adding task: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 @app.route('/client/<client_id>/update_audit_task/<task_id>', methods=['POST'])
 def update_audit_task(client_id, task_id):
@@ -4818,7 +4831,145 @@ def delete_task_document(client_id, doc_id):
             "error": str(e)
         }), 500
 
+@app.route('/client/<client_id>/user_dashboard')
+def user_dashboard(client_id):
+    try:
+        # Get period dates from query parameters
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
 
+        # Fetch client data
+        client = clients_collection.find_one({"_id": ObjectId(client_id)})
+        if not client:
+            flash("Client not found", "error")
+            return redirect(url_for("dashboard"))
+
+        # Get all audit periods
+        audit_periods = list(client_audit_plan_collection.find(
+            {"client_id": ObjectId(client_id)},
+            sort=[("start_date", -1)]
+        ))
+
+        # Base query for tasks
+        base_query = {"client_id": ObjectId(client_id)}
+        if start_date and end_date:
+            base_query.update({
+                "period_start": start_date,
+                "period_end": end_date
+            })
+
+        # Fetch team members
+        team_members = list(team_users_collection.find({"client_id": client_id}))
+        
+        # Calculate stats for each user
+        user_stats = []
+        for member in team_members:
+            # Get tasks for this member
+            member_tasks = list(audit_execution_dynamic.find({
+                **base_query,
+                "tasks.allocated_team_member": member["username"]
+            }))
+            
+            # Initialize counters
+            total_tasks = 0
+            completed_tasks = 0
+            pending_tasks = 0
+            in_progress_tasks = 0
+
+            # Count tasks and their statuses
+            for task_doc in member_tasks:
+                for task in task_doc.get('tasks', []):
+                    if task.get('allocated_team_member') == member["username"]:
+                        total_tasks += 1
+                        status = task.get('status', '').lower()
+                        if status == 'completed':
+                            completed_tasks += 1
+                        elif status == 'in progress':
+                            in_progress_tasks += 1
+                        else:
+                            pending_tasks += 1
+
+            # Calculate completion rate
+            completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+
+            user_stats.append({
+                'name': member.get('username'),
+                'email': member.get('email'),
+                'total_tasks': total_tasks,
+                'completed_tasks': completed_tasks,
+                'in_progress_tasks': in_progress_tasks,
+                'pending_tasks': pending_tasks,
+                'completion_rate': round(completion_rate, 2)
+            })
+
+        # Get recent activities
+        recent_activities = list(audit_execution_dynamic.aggregate([
+            {"$match": base_query},
+            {"$unwind": "$tasks"},
+            {"$sort": {"tasks.updated_at": -1}},
+            {"$limit": 10}
+        ]))
+
+        # Convert ObjectId to string for template
+        client['_id'] = str(client['_id'])
+
+        return render_template(
+            'user_dashboard.html',
+            client=client,
+            client_id=client_id,  # Add this line
+            user_stats=user_stats,
+            recent_activities=recent_activities,
+            start_date=start_date,
+            end_date=end_date,
+            audit_periods=audit_periods
+        )
+
+    except Exception as e:
+        logging.error(f"Error in user dashboard: {str(e)}")
+        flash("An error occurred while loading the user dashboard.", "error")
+        return redirect(url_for('dashboard'))
+
+@app.route('/api/client/<client_id>/user_tasks')
+def get_user_tasks(client_id):
+    try:
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+        # Base query
+        query = {"client_id": ObjectId(client_id)}
+        if start_date and end_date:
+            query.update({
+                "period_start": start_date,
+                "period_end": end_date
+            })
+
+        # Get all tasks
+        tasks = []
+        execution_data = audit_execution_dynamic.find(query)
+        
+        for exec_doc in execution_data:
+            scope_area = exec_doc.get('scope_area')
+            for task in exec_doc.get('tasks', []):
+                tasks.append({
+                    "_id": str(task.get('_id')),
+                    "task_name": task.get('task_name'),
+                    "scope_area": scope_area,
+                    "status": task.get('status'),
+                    "allocated_team_member": task.get('allocated_team_member'),
+                    "updated_at": task.get('updated_at').isoformat() if task.get('updated_at') else None
+                })
+
+        return jsonify({
+            "success": True,
+            "tasks": tasks
+        })
+
+    except Exception as e:
+        logging.error(f"Error fetching user tasks: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 @app.route('/logout')
 def logout():
