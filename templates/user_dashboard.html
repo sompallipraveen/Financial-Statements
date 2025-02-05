@@ -1,0 +1,338 @@
+{% extends "client_page.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="h4">User Task Dashboard</h2>
+            <p class="text-muted">Task overview and progress by team member</p>
+        </div>
+    </div>
+
+    <!-- Period Selection -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="card-title mb-0">Select Period</h5>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <select class="form-select me-2" id="periodSelect" onchange="updateDashboard()">
+                            <option value="">Select Period...</option>
+                            {% for period in audit_periods %}
+                                <option value="{{ period.start_date }}|{{ period.end_date }}" 
+                                        {% if period.start_date == start_date and period.end_date == end_date %}selected{% endif %}>
+                                    {{ period.start_date }} to {{ period.end_date }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-primary" onclick="refreshDashboard()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Stats Cards -->
+    <div class="row">
+        {% for user in user_stats %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="card-title mb-0">{{ user.name }}</h5>
+                            <small class="text-muted">{{ user.email }}</small>
+                        </div>
+                        <div class="rounded-circle bg-light p-3">
+                            <i class="fas fa-user text-primary"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Task Completion</span>
+                            <span>{{ user.completion_rate }}%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" role="progressbar" 
+                                 style="width: {{ user.completion_rate }}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="row text-center mt-4">
+                        <div class="col">
+                            <h6 class="mb-0">{{ user.total_tasks }}</h6>
+                            <small class="text-muted">Total Tasks</small>
+                        </div>
+                        <div class="col">
+                            <h6 class="mb-0 text-success">{{ user.completed_tasks }}</h6>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                        <div class="col">
+                            <h6 class="mb-0 text-warning">{{ user.pending_tasks }}</h6>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+<!-- User Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <select class="form-select" id="userFilter" onchange="filterByUser()">
+                    <option value="">Select User...</option>
+                    {% for user in user_stats %}
+                        <option value="{{ user.name }}">{{ user.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="statusFilter" onchange="filterByUser()">
+                    <option value="">All Statuses</option>
+                    <option value="completed">Completed</option>
+                    <option value="pending">Pending</option>
+                    <option value="in progress">In Progress</option>
+                </select>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-secondary" onclick="clearFilters()">
+                    <i class="fas fa-times me-2"></i>Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Task Details Section -->
+<div id="userTaskDetails" class="card shadow-sm mb-4" style="display: none;">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <span id="selectedUserName"></span>'s Tasks
+            <small class="text-muted" id="taskCount"></small>
+        </h5>
+    </div>
+    <div class="card-body">
+        <ul class="nav nav-tabs mb-3" id="taskTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="pending-tab" data-bs-toggle="tab" href="#pending" role="tab">
+                    Pending Tasks <span class="badge bg-warning ms-2" id="pendingCount">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="completed-tab" data-bs-toggle="tab" href="#completed" role="tab">
+                    Completed Tasks <span class="badge bg-success ms-2" id="completedCount">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="inprogress-tab" data-bs-toggle="tab" href="#inprogress" role="tab">
+                    In Progress <span class="badge bg-info ms-2" id="inProgressCount">0</span>
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content" id="taskTabContent">
+            <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="pendingTasksTable">
+                        <thead>
+                            <tr>
+                                <th>Task Name</th>
+                                <th>Scope Area</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="completed" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="completedTasksTable">
+                        <thead>
+                            <tr>
+                                <th>Task Name</th>
+                                <th>Scope Area</th>
+                                <th>Completion Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="inprogress" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="inProgressTasksTable">
+                        <thead>
+                            <tr>
+                                <th>Task Name</th>
+                                <th>Scope Area</th>
+                                <th>Start Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Recent Activities -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Recent Activities</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in recent_activities %}
+                        <tr>
+                            <td>{{ activity.tasks.allocated_team_member }}</td>
+                            <td>{{ activity.tasks.task_name }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if activity.tasks.status == 'Completed' 
+                                                       else 'warning' if activity.tasks.status == 'In Progress'
+                                                       else 'secondary' }}">
+                                    {{ activity.tasks.status }}
+                                </span>
+                            </td>
+                            <td>{{ activity.tasks.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateDashboard() {
+    const periodSelect = document.getElementById('periodSelect');
+    if (!periodSelect.value) return;
+
+    const [startDate, endDate] = periodSelect.value.split('|');
+    const clientId = '{{ client_id }}';
+    
+    window.location.href = `/client/${clientId}/user_dashboard?start_date=${startDate}&end_date=${endDate}`;
+}
+
+function refreshDashboard() {
+    const periodSelect = document.getElementById('periodSelect');
+    if (periodSelect.value) {
+        updateDashboard();
+    } else {
+        location.reload();
+    }
+}
+</script>
+<script>
+// Store all tasks data
+let allTasks = [];
+
+// Load tasks data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserTasks();
+});
+
+function loadUserTasks() {
+    const clientId = '{{ client_id }}';
+    const startDate = '{{ start_date }}';
+    const endDate = '{{ end_date }}';
+
+    fetch(`/api/client/${clientId}/user_tasks?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => response.json())
+        .then(data => {
+            allTasks = data.tasks;
+            updateTaskCounters();
+        })
+        .catch(error => console.error('Error loading tasks:', error));
+}
+
+function filterByUser() {
+    const selectedUser = document.getElementById('userFilter').value;
+    const selectedStatus = document.getElementById('statusFilter').value;
+    const userTaskDetails = document.getElementById('userTaskDetails');
+
+    if (!selectedUser) {
+        userTaskDetails.style.display = 'none';
+        return;
+    }
+
+    userTaskDetails.style.display = 'block';
+    document.getElementById('selectedUserName').textContent = selectedUser;
+
+    // Filter tasks
+    let filteredTasks = allTasks.filter(task => 
+        task.allocated_team_member === selectedUser &&
+        (!selectedStatus || task.status.toLowerCase() === selectedStatus)
+    );
+
+    // Update counters
+    const pending = filteredTasks.filter(t => t.status.toLowerCase() === 'pending').length;
+    const completed = filteredTasks.filter(t => t.status.toLowerCase() === 'completed').length;
+    const inProgress = filteredTasks.filter(t => t.status.toLowerCase() === 'in progress').length;
+
+    document.getElementById('pendingCount').textContent = pending;
+    document.getElementById('completedCount').textContent = completed;
+    document.getElementById('inProgressCount').textContent = inProgress;
+    document.getElementById('taskCount').textContent = `(${filteredTasks.length} tasks)`;
+
+    // Update tables
+    updateTaskTable('pendingTasksTable', filteredTasks.filter(t => t.status.toLowerCase() === 'pending'));
+    updateTaskTable('completedTasksTable', filteredTasks.filter(t => t.status.toLowerCase() === 'completed'));
+    updateTaskTable('inProgressTasksTable', filteredTasks.filter(t => t.status.toLowerCase() === 'in progress'));
+}
+
+function updateTaskTable(tableId, tasks) {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    tbody.innerHTML = '';
+
+    tasks.forEach(task => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${task.task_name}</td>
+            <td>${task.scope_area}</td>
+            <td>${new Date(task.updated_at).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewTaskDetails('${task._id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function clearFilters() {
+    document.getElementById('userFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('userTaskDetails').style.display = 'none';
+}
+
+function viewTaskDetails(taskId) {
+    // Implement task details view
+    console.log(`Viewing task ${taskId}`);
+}
+</script>
+{% endblock %}

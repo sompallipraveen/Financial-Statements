@@ -434,7 +434,7 @@
        class="{{ 'active' if request.endpoint == 'file_management' }}"
        title="Manage Files">
         <i class="fas fa-file-alt"></i> File Management
-    </a>
+
 
     <!-- Team Management -->
     <a href="{{ url_for('manage_users', client_id=client_id) }}"
@@ -451,6 +451,12 @@
 class="{{ 'active' if request.endpoint == 'audit_dashboard' }}"
 title="Audit Dashboard">
  <i class="fas fa-chart-line"></i> Audit Dashboard
+</a>
+</a>
+<!-- Add this under the Audit Management section -->
+<a href="{{ url_for('user_dashboard', client_id=client_id) }}{% if start_date and end_date %}?start_date={{start_date}}&end_date={{end_date}}{% endif %}"
+   class="{{ 'active' if request.endpoint == 'user_dashboard' }}">
+    <i class="fas fa-users-cog"></i> User Dashboard
 </a>
 
     <!-- Company Information -->
