@@ -1655,6 +1655,9 @@ def add_audit_task(client_id):
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         
+        if not start_date or not end_date:
+            return jsonify({"success": False, "error": "Period dates are required"}), 400
+
         task_data = {
             "_id": ObjectId(),
             "task_name": request.form.get("task_name"),
@@ -1663,22 +1666,10 @@ def add_audit_task(client_id):
             "comments": request.form.get("comments"),
             "status": request.form.get("status"),
             "allocated_team_member": request.form.get("allocated_team_member"),
-            "due_date": request.form.get("due_date"),  # Add this line
             "created_at": datetime.now(),
             "updated_at": datetime.now()
         }
         
-        # Validate due date is within audit period
-        due_date = datetime.strptime(task_data["due_date"], '%Y-%m-%d')
-        audit_start = datetime.strptime(start_date, '%Y-%m-%d')
-        audit_end = datetime.strptime(end_date, '%Y-%m-%d')
-        
-        if not (audit_start <= due_date <= audit_end):
-            return jsonify({
-                "success": False,
-                "error": "Due date must be within the audit period"
-            }), 400
-
         scope_area = request.form.get("scope_area")
 
         # Add task to dynamic collection
@@ -1698,8 +1689,7 @@ def add_audit_task(client_id):
         if result.modified_count > 0:
             return jsonify({
                 "success": True, 
-                "task_id": str(task_data["_id"]),
-                "message": "Task added successfully"
+                "task_id": str(task_data["_id"])
             })
         else:
             return jsonify({
@@ -1709,10 +1699,7 @@ def add_audit_task(client_id):
 
     except Exception as e:
         logging.error(f"Error adding task: {str(e)}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/client/<client_id>/update_audit_task/<task_id>', methods=['POST'])
 def update_audit_task(client_id, task_id):
@@ -4970,6 +4957,7 @@ def get_user_tasks(client_id):
             "success": False,
             "error": str(e)
         }), 500
+
 
 @app.route('/logout')
 def logout():
