@@ -88,19 +88,6 @@
     background-color: #28a745;
     border-color: #28a745;
 }
-.task-overdue .task-due-date {
-    color: #dc3545;
-    font-weight: bold;
-}
-
-.due-soon .task-due-date {
-    color: #ffc107;
-    font-weight: bold;
-}
-
-.task-completed .task-due-date {
-    color: #28a745;
-}
 </style>
 
 <div class="container-fluid px-4">
@@ -291,7 +278,6 @@
                                                 <th>Comments</th>
                                                 <th>Status</th>
                                                 <th>Team Member</th>
-                                                <th>Due Date</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -309,15 +295,6 @@
                                                                    {% else %}bg-secondary{% endif %}">
                                                         {{ task.status }}
                                                     </span>
-                                                </td>
-                                                <td class="task-member">{{ task.allocated_team_member }}</td>
-                                                <td class="task-due-date">
-                                                    {% if task.due_date %}
-                                                        <span class="{% if task.due_date < now|string %}text-danger{% endif %}">
-                                                            {{ task.due_date }}
-                                                        </span>
-                                                    {% endif %}
-                                                </td>
                                                 </td>
                                                 <td class="task-member">{{ task.allocated_team_member }}</td>
                                                 <td>
@@ -373,8 +350,13 @@
                                                         <textarea class="form-control" name="procedure" rows="3"></textarea>
                                                     </div>
 
-                                                    <!-- Add this inside the Add Task Modal form -->
                                                     <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Audit Evidence</label>
+                                                                <input type="text" class="form-control" name="audit_evidence">
+                                                            </div>
+                                                        </div>
                                                         <div class="col-md-6">
                                                             <div class="mb-3">
                                                                 <label class="form-label">Status</label>
@@ -383,14 +365,6 @@
                                                                     <option value="In Progress">In Progress</option>
                                                                     <option value="Completed">Completed</option>
                                                                 </select>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Due Date*</label>
-                                                                <input type="date" class="form-control" name="due_date" required
-                                                                    min="{{ start_date }}" max="{{ end_date }}">
-                                                                <small class="text-muted">Must be within audit period</small>
                                                             </div>
                                                         </div>
                                                     </div>
