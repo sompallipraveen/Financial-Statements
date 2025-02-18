@@ -1666,6 +1666,7 @@ def add_audit_task(client_id):
             "comments": request.form.get("comments"),
             "status": request.form.get("status"),
             "allocated_team_member": request.form.get("allocated_team_member"),
+            "due_date": request.form.get("due_date"),  # Add due date field
             "created_at": datetime.now(),
             "updated_at": datetime.now()
         }
@@ -1721,6 +1722,7 @@ def update_audit_task(client_id, task_id):
                     "tasks.$.comments": data.get('comments'),
                     "tasks.$.status": data.get('status'),
                     "tasks.$.allocated_team_member": data.get('allocated_team_member'),
+                    "tasks.$.due_date": data.get('due_date'),  # Add due date field
                     "tasks.$.updated_at": datetime.now()
                 }
             }
@@ -1795,23 +1797,19 @@ from urllib.parse import unquote
 @app.route('/client/<client_id>/generate_audit_procedure/<scope_area>', methods=['POST'])
 def generate_audit_procedure(client_id, scope_area):
     try:
-        # Decode the scope_area to handle special characters like %2F for '/'
         scope_area = unquote(scope_area)
-        logging.debug(f"Decoded scope_area: {scope_area}")
-
-        # Fetch the standard procedures for the specified scope_area
         standard_procedures = audit_execution_collection.find_one({"scope_area": scope_area})
-        logging.debug(f"Query Result: {standard_procedures}")
 
-        # Handle case where no procedures are found
         if not standard_procedures or not standard_procedures.get('tasks'):
             return jsonify({
                 "success": False,
                 "error": f"No standard procedures found for scope area: {scope_area}"
             }), 404
 
-        # Process and generate tasks
         standard_tasks = standard_procedures['tasks']
+        # Calculate default due date (e.g., 30 days from now)
+        default_due_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
+        
         new_tasks = [
             {
                 "_id": ObjectId(),
@@ -1821,13 +1819,13 @@ def generate_audit_procedure(client_id, scope_area):
                 "comments": task.get("comments", ""),
                 "status": "Pending",
                 "allocated_team_member": "",
+                "due_date": default_due_date,  # Add default due date
                 "created_at": datetime.now(),
                 "updated_at": datetime.now(),
             }
             for task in standard_tasks
         ]
 
-        # Insert the tasks into the audit_execution_dynamic collection
         audit_execution_dynamic.update_one(
             {
                 "client_id": ObjectId(client_id),
@@ -1848,7 +1846,6 @@ def generate_audit_procedure(client_id, scope_area):
     except Exception as e:
         logging.error(f"Error in generate_audit_procedure: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 
 
@@ -4831,7 +4828,7 @@ def user_dashboard(client_id):
             flash("Client not found", "error")
             return redirect(url_for("dashboard"))
 
-        # Get all audit periods
+        # Get all audit periods for dropdown
         audit_periods = list(client_audit_plan_collection.find(
             {"client_id": ObjectId(client_id)},
             sort=[("start_date", -1)]
@@ -4845,25 +4842,86 @@ def user_dashboard(client_id):
                 "period_end": end_date
             })
 
-        # Fetch team members
-        team_members = list(team_users_collection.find({"client_id": client_id}))
+        # Get all tasks and group by status
+        execution_data = audit_execution_dynamic.find(base_query)
         
-        # Calculate stats for each user
+        task_stats = {
+            'pending': {'tasks': [], 'count': 0},
+            'in_progress': {'tasks': [], 'count': 0},
+            'completed': {'tasks': [], 'count': 0}
+        }
+
+        for execution in execution_data:
+            for task in execution.get('tasks', []):
+                task_info = {
+                    'id': str(task['_id']),
+                    'name': task.get('task_name'),
+                    'scope_area': execution.get('scope_area'),
+                    'allocated_to': task.get('allocated_team_member', 'Unassigned'),
+                    'due_date': task.get('due_date'),
+                    'updated_at': task.get('updated_at'),
+                    'procedure': task.get('procedure', ''),
+                    'evidence': task.get('audit_evidence', ''),
+                    'comments': task.get('comments', '')
+                }
+                
+                status = task.get('status', '').lower()
+                if status == 'completed':
+                    task_stats['completed']['tasks'].append(task_info)
+                    task_stats['completed']['count'] += 1
+                elif status == 'in progress':
+                    task_stats['in_progress']['tasks'].append(task_info)
+                    task_stats['in_progress']['count'] += 1
+                else:
+                    task_stats['pending']['tasks'].append(task_info)
+                    task_stats['pending']['count'] += 1
+
+        # Sort tasks by date
+        for status in task_stats:
+            task_stats[status]['tasks'].sort(
+                key=lambda x: x.get('updated_at', datetime.min), 
+                reverse=True
+            )
+
+        # Calculate completion rates and overdue tasks
+        total_tasks = sum(status['count'] for status in task_stats.values())
+        completion_rate = 0
+        if total_tasks > 0:
+            completion_rate = (task_stats['completed']['count'] / total_tasks) * 100
+
+        # Calculate overdue tasks
+        current_date = datetime.now().date()
+        overdue_tasks = []
+        for task in task_stats['pending']['tasks']:
+            if task.get('due_date'):
+                due_date = datetime.strptime(task['due_date'], '%Y-%m-%d').date()
+                if due_date < current_date:
+                    overdue_tasks.append(task)
+
+        # Get user info and activity data
+        team_members = list(team_users_collection.find({"client_id": client_id}))
+
+        # Get recent activities
+        recent_activities = list(audit_execution_dynamic.aggregate([
+            {"$match": base_query},
+            {"$unwind": "$tasks"},
+            {"$sort": {"tasks.updated_at": -1}},
+            {"$limit": 10}
+        ]))
+
+        # Calculate task statistics by team member
         user_stats = []
         for member in team_members:
-            # Get tasks for this member
             member_tasks = list(audit_execution_dynamic.find({
                 **base_query,
                 "tasks.allocated_team_member": member["username"]
             }))
             
-            # Initialize counters
             total_tasks = 0
             completed_tasks = 0
-            pending_tasks = 0
             in_progress_tasks = 0
+            pending_tasks = 0
 
-            # Count tasks and their statuses
             for task_doc in member_tasks:
                 for task in task_doc.get('tasks', []):
                     if task.get('allocated_team_member') == member["username"]:
@@ -4876,7 +4934,6 @@ def user_dashboard(client_id):
                         else:
                             pending_tasks += 1
 
-            # Calculate completion rate
             completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
 
             user_stats.append({
@@ -4889,32 +4946,58 @@ def user_dashboard(client_id):
                 'completion_rate': round(completion_rate, 2)
             })
 
-        # Get recent activities
-        recent_activities = list(audit_execution_dynamic.aggregate([
-            {"$match": base_query},
-            {"$unwind": "$tasks"},
-            {"$sort": {"tasks.updated_at": -1}},
-            {"$limit": 10}
-        ]))
-
-        # Convert ObjectId to string for template
-        client['_id'] = str(client['_id'])
-
         return render_template(
             'user_dashboard.html',
             client=client,
-            client_id=client_id,  # Add this line
-            user_stats=user_stats,
+            client_id=client_id,
+            task_stats=task_stats,
+            team_members=team_members,
             recent_activities=recent_activities,
+            audit_periods=audit_periods,
             start_date=start_date,
             end_date=end_date,
-            audit_periods=audit_periods
+            total_tasks=total_tasks,
+            completion_rate=completion_rate,
+            overdue_tasks=overdue_tasks,
+            user_stats=user_stats
         )
 
     except Exception as e:
         logging.error(f"Error in user dashboard: {str(e)}")
-        flash("An error occurred while loading the user dashboard.", "error")
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        flash("An error occurred while loading the dashboard.", "error")
         return redirect(url_for('dashboard'))
+
+# Add helper route for task details
+@app.route('/api/task/<task_id>/details')
+def get_task_details(task_id):
+    try:
+        # Find the task in audit execution
+        execution = audit_execution_dynamic.find_one(
+            {"tasks._id": ObjectId(task_id)},
+            {"tasks.$": 1, "scope_area": 1, "period_start": 1, "period_end": 1}
+        )
+        
+        if not execution:
+            return jsonify({"error": "Task not found"}), 404
+
+        # Get the task and add scope area
+        task = execution['tasks'][0]
+        task['_id'] = str(task['_id'])
+        task['scope_area'] = execution.get('scope_area')
+        task['period_start'] = execution.get('period_start')
+        task['period_end'] = execution.get('period_end')
+
+        # Get supporting documents if any
+        if 'supporting_docs' in task:
+            for doc in task['supporting_docs']:
+                doc['_id'] = str(doc['_id'])
+
+        return jsonify(task)
+
+    except Exception as e:
+        logging.error(f"Error getting task details: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/client/<client_id>/user_tasks')
 def get_user_tasks(client_id):
@@ -4957,8 +5040,407 @@ def get_user_tasks(client_id):
             "success": False,
             "error": str(e)
         }), 500
+@app.route('/api/client/<client_id>/user_task_timeline')
+def get_user_task_timeline(client_id):
+    try:
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        selected_user = request.args.get('user')
 
+        # Base query
+        query = {"client_id": ObjectId(client_id)}
+        if start_date and end_date:
+            query.update({
+                "period_start": start_date,
+                "period_end": end_date
+            })
+        
+        if selected_user:
+            query["tasks.allocated_team_member"] = selected_user
 
+        # Get current date for comparison
+        current_date = datetime.now().date()
+
+        # Initialize task categories
+        task_timeline = {
+            "overdue": [],
+            "due_today": [],
+            "upcoming": [],
+            "this_week": [],
+            "next_week": [],
+            "later": []
+        }
+
+        # Fetch and categorize tasks
+        execution_data = audit_execution_dynamic.find(query)
+        
+        for exec_doc in execution_data:
+            scope_area = exec_doc.get('scope_area')
+            for task in exec_doc.get('tasks', []):
+                if task.get('status') != 'Completed':  # Only include non-completed tasks
+                    try:
+                        due_date = datetime.strptime(task.get('due_date'), '%Y-%m-%d').date()
+                        days_until_due = (due_date - current_date).days
+                        
+                        task_info = {
+                            "_id": str(task.get('_id')),
+                            "task_name": task.get('task_name'),
+                            "scope_area": scope_area,
+                            "status": task.get('status'),
+                            "allocated_team_member": task.get('allocated_team_member'),
+                            "due_date": task.get('due_date'),
+                            "days_until_due": days_until_due
+                        }
+
+                        # Categorize task based on due date
+                        if days_until_due < 0:
+                            task_timeline["overdue"].append(task_info)
+                        elif days_until_due == 0:
+                            task_timeline["due_today"].append(task_info)
+                        elif days_until_due <= 7:
+                            task_timeline["this_week"].append(task_info)
+                        elif days_until_due <= 14:
+                            task_timeline["next_week"].append(task_info)
+                        else:
+                            task_timeline["later"].append(task_info)
+
+                    except (ValueError, TypeError):
+                        continue
+
+        # Sort tasks by due date within each category
+        for category in task_timeline:
+            task_timeline[category].sort(key=lambda x: x['due_date'])
+
+        return jsonify({
+            "success": True,
+            "task_timeline": task_timeline,
+            "counts": {
+                category: len(tasks) 
+                for category, tasks in task_timeline.items()
+            }
+        })
+
+    except Exception as e:
+        logging.error(f"Error fetching task timeline: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+@app.route('/api/task/<task_id>/complete', methods=['POST'])
+def complete_task(task_id):
+    try:
+        # Get completion date from request
+        data = request.get_json()
+        completion_date = data.get('completion_date', datetime.now().isoformat())
+
+        # Update the task status
+        result = audit_execution_dynamic.update_one(
+            {"tasks._id": ObjectId(task_id)},
+            {
+                "$set": {
+                    "tasks.$.status": "Completed",
+                    "tasks.$.completed_date": completion_date,
+                    "tasks.$.updated_at": datetime.now()
+                }
+            }
+        )
+
+        if result.modified_count > 0:
+            # Get updated task for the response
+            execution = audit_execution_dynamic.find_one(
+                {"tasks._id": ObjectId(task_id)},
+                {"tasks.$": 1}
+            )
+            
+            if execution and execution.get('tasks'):
+                task = execution['tasks'][0]
+                return jsonify({
+                    "success": True,
+                    "message": "Task marked as completed",
+                    "task": {
+                        "id": str(task['_id']),
+                        "status": task['status'],
+                        "completed_date": task.get('completed_date'),
+                        "updated_at": task.get('updated_at')
+                    }
+                })
+            
+        return jsonify({
+            "success": False,
+            "error": "Failed to update task"
+        }), 400
+
+    except Exception as e:
+        logging.error(f"Error completing task: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+        
+from docx import Document
+from docx.shared import Inches, Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from datetime import datetime
+import io
+
+def generate_execution_report_word(client, execution_data, start_date, end_date):
+    """Generate Word report for audit execution"""
+    doc = Document()
+    
+    # Add title
+    title = doc.add_heading(f'Audit Execution Report - {client["company_name"]}', level=1)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Add period information
+    doc.add_paragraph(f'Audit Period: {start_date} to {end_date}')
+    doc.add_paragraph(f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+    
+    # Calculate statistics
+    stats = calculate_execution_stats(execution_data)
+    
+    # Add Executive Summary
+    doc.add_heading('Executive Summary', level=2)
+    summary_table = doc.add_table(rows=1, cols=2)
+    summary_table.style = 'Table Grid'
+    
+    # Add statistics to summary table
+    add_stats_to_word_table(summary_table, stats)
+    
+    # Add Progress By Area section
+    doc.add_heading('Progress By Area', level=2)
+    for execution in execution_data:
+        scope_area = execution.get('scope_area', '')
+        tasks = execution.get('tasks', [])
+        
+        if tasks:
+            doc.add_heading(scope_area, level=3)
+            table = doc.add_table(rows=1, cols=6)
+            table.style = 'Table Grid'
+            
+            # Add headers
+            headers = ['Task', 'Procedure', 'Evidence', 'Status', 'Team Member', 'Comments']
+            header_cells = table.rows[0].cells
+            for i, header in enumerate(headers):
+                header_cells[i].text = header
+                header_cells[i].paragraphs[0].runs[0].font.bold = True
+            
+            # Add tasks
+            add_tasks_to_word_table(table, tasks)
+    
+    # Add Recommendations
+    doc.add_heading('Recommendations', level=2)
+    add_recommendations_to_doc(doc, execution_data)
+    
+    # Save to memory
+    doc_buffer = io.BytesIO()
+    doc.save(doc_buffer)
+    doc_buffer.seek(0)
+    
+    return doc_buffer
+
+def generate_execution_report_excel(client, execution_data, start_date, end_date):
+    """Generate Excel report for audit execution"""
+    wb = Workbook()
+    
+    # Create Summary Sheet
+    ws_summary = wb.active
+    ws_summary.title = "Summary"
+    
+    # Add title and period info
+    ws_summary['A1'] = f'Audit Execution Report - {client["company_name"]}'
+    ws_summary['A2'] = f'Period: {start_date} to {end_date}'
+    ws_summary['A3'] = f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+    
+    # Calculate statistics
+    stats = calculate_execution_stats(execution_data)
+    
+    # Add statistics to summary sheet
+    add_stats_to_excel_sheet(ws_summary, stats)
+    
+    # Create Tasks Sheet
+    ws_tasks = wb.create_sheet("Tasks")
+    headers = ['Scope Area', 'Task Name', 'Procedure', 'Evidence', 'Status', 'Team Member', 'Comments']
+    ws_tasks.append(headers)
+    
+    # Add task data
+    add_tasks_to_excel_sheet(ws_tasks, execution_data)
+    
+    # Create Recommendations Sheet
+    ws_recommendations = wb.create_sheet("Recommendations")
+    add_recommendations_to_excel(ws_recommendations, execution_data)
+    
+    # Apply formatting
+    apply_excel_formatting(wb)
+    
+    # Save to memory
+    excel_buffer = io.BytesIO()
+    wb.save(excel_buffer)
+    excel_buffer.seek(0)
+    
+    return excel_buffer
+
+def calculate_execution_stats(execution_data):
+    """Calculate statistics for audit execution"""
+    stats = {
+        'total_tasks': 0,
+        'completed_tasks': 0,
+        'in_progress_tasks': 0,
+        'pending_tasks': 0,
+        'scope_stats': {}
+    }
+    
+    for execution in execution_data:
+        scope_area = execution.get('scope_area')
+        tasks = execution.get('tasks', [])
+        
+        scope_stats = {
+            'total': len(tasks),
+            'completed': 0,
+            'in_progress': 0,
+            'pending': 0
+        }
+        
+        for task in tasks:
+            status = task.get('status', '').lower()
+            stats['total_tasks'] += 1
+            
+            if status == 'completed':
+                stats['completed_tasks'] += 1
+                scope_stats['completed'] += 1
+            elif status == 'in progress':
+                stats['in_progress_tasks'] += 1
+                scope_stats['in_progress'] += 1
+            else:
+                stats['pending_tasks'] += 1
+                scope_stats['pending'] += 1
+        
+        stats['scope_stats'][scope_area] = scope_stats
+    
+    return stats
+
+# Helper functions for Word report
+def add_stats_to_word_table(table, stats):
+    """Add statistics to Word table"""
+    rows_data = [
+        ('Total Tasks', str(stats['total_tasks'])),
+        ('Completed Tasks', str(stats['completed_tasks'])),
+        ('In Progress Tasks', str(stats['in_progress_tasks'])),
+        ('Pending Tasks', str(stats['pending_tasks'])),
+        ('Completion Rate', f"{(stats['completed_tasks']/stats['total_tasks']*100 if stats['total_tasks'] > 0 else 0):.1f}%")
+    ]
+    
+    for data in rows_data:
+        row_cells = table.add_row().cells
+        row_cells[0].text = data[0]
+        row_cells[1].text = data[1]
+        row_cells[0].paragraphs[0].runs[0].font.bold = True
+
+def add_tasks_to_word_table(table, tasks):
+    """Add tasks to Word table"""
+    for task in tasks:
+        row_cells = table.add_row().cells
+        row_cells[0].text = task.get('task_name', '')
+        row_cells[1].text = task.get('procedure', '')
+        row_cells[2].text = task.get('audit_evidence', '')
+        row_cells[3].text = task.get('status', '')
+        row_cells[4].text = task.get('allocated_team_member', '')
+        row_cells[5].text = task.get('comments', '')
+
+def add_recommendations_to_doc(doc, execution_data):
+    """Add recommendations section to Word document"""
+    for execution in execution_data:
+        scope_area = execution.get('scope_area')
+        tasks = execution.get('tasks', [])
+        pending_tasks = [task for task in tasks if task.get('status', '').lower() != 'completed']
+        
+        if pending_tasks:
+            doc.add_paragraph(f'{scope_area}:', style='Heading 3')
+            for task in pending_tasks:
+                doc.add_paragraph(
+                    f"• Complete task '{task.get('task_name')}' currently marked as {task.get('status')}",
+                    style='List Bullet'
+                )
+
+# Helper functions for Excel report
+def add_stats_to_excel_sheet(ws, stats):
+    """Add statistics to Excel summary sheet"""
+    current_row = 5  # Start after title and period info
+    
+    headers = ['Metric', 'Value']
+    ws.append([''] * len(headers))  # Empty row for spacing
+    ws.append(headers)
+    
+    stats_data = [
+        ('Total Tasks', stats['total_tasks']),
+        ('Completed Tasks', stats['completed_tasks']),
+        ('In Progress Tasks', stats['in_progress_tasks']),
+        ('Pending Tasks', stats['pending_tasks']),
+        ('Completion Rate', f"{(stats['completed_tasks']/stats['total_tasks']*100 if stats['total_tasks'] > 0 else 0):.1f}%")
+    ]
+    
+    for stat in stats_data:
+        ws.append(stat)
+
+def add_tasks_to_excel_sheet(ws, execution_data):
+    """Add tasks to Excel tasks sheet"""
+    for execution in execution_data:
+        scope_area = execution.get('scope_area')
+        for task in execution.get('tasks', []):
+            ws.append([
+                scope_area,
+                task.get('task_name', ''),
+                task.get('procedure', ''),
+                task.get('audit_evidence', ''),
+                task.get('status', ''),
+                task.get('allocated_team_member', ''),
+                task.get('comments', '')
+            ])
+
+def add_recommendations_to_excel(ws, execution_data):
+    """Add recommendations to Excel recommendations sheet"""
+    ws.append(['Scope Area', 'Task Name', 'Current Status', 'Recommendation'])
+    
+    for execution in execution_data:
+        scope_area = execution.get('scope_area')
+        tasks = execution.get('tasks', [])
+        
+        for task in tasks:
+            if task.get('status', '').lower() != 'completed':
+                ws.append([
+                    scope_area,
+                    task.get('task_name', ''),
+                    task.get('status', ''),
+                    f"Complete task and ensure proper documentation"
+                ])
+
+def apply_excel_formatting(workbook):
+    """Apply formatting to Excel workbook"""
+    header_font = Font(bold=True)
+    header_fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+    header_alignment = Alignment(horizontal='center', vertical='center')
+    
+    for ws in workbook.worksheets:
+        # Format headers
+        for cell in ws[1]:
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+        
+        # Adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column = list(column)
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except TypeError:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column[0].column_letter].width = min(adjusted_width, 50)
+            
 @app.route('/logout')
 def logout():
     session.clear()
