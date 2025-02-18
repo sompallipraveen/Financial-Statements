@@ -1,6 +1,35 @@
 {% extends "client_page.html" %}
 
 {% block content %}
+
+<style>
+    .timeline-tasks {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .list-group-item {
+        transition: all 0.3s ease;
+    }
+    
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+    
+    .nav-pills .nav-link.active {
+        background-color: #0d6efd;
+    }
+    
+    .task-timeline .badge {
+        font-size: 0.8em;
+    }
+    
+    .timeline-alert {
+        border-left: 4px solid;
+        margin-bottom: 1rem;
+    }
+</style>
 <div class="container-fluid">
     <!-- Dashboard Header -->
     <div class="row mb-4">
@@ -187,7 +216,322 @@
         </div>
     </div>
 </div>
+<!-- Task Timeline Section -->
+<div class="card shadow-sm mb-4" id="taskTimelineSection" style="display: none;">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Task Timeline</h5>
+    </div>
+    <div class="card-body">
+        <!-- Timeline Navigation -->
+        <ul class="nav nav-pills mb-3" id="timelineTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="overdue-tab" data-bs-toggle="pill" href="#overdue" role="tab">
+                    Overdue <span class="badge bg-danger ms-2" id="overdueCount">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="today-tab" data-bs-toggle="pill" href="#today" role="tab">
+                    Due Today <span class="badge bg-warning ms-2" id="todayCount">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="this-week-tab" data-bs-toggle="pill" href="#this-week" role="tab">
+                    This Week <span class="badge bg-info ms-2" id="thisWeekCount">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="next-week-tab" data-bs-toggle="pill" href="#next-week" role="tab">
+                    Next Week <span class="badge bg-primary ms-2" id="nextWeekCount">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="later-tab" data-bs-toggle="pill" href="#later" role="tab">
+                    Later <span class="badge bg-secondary ms-2" id="laterCount">0</span>
+                </a>
+            </li>
+        </ul>
 
+        <!-- Timeline Content -->
+        <div class="tab-content" id="timelineTabContent">
+            <!-- Overdue Tasks -->
+            <div class="tab-pane fade show active" id="overdue" role="tabpanel">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    These tasks are past their due date and require immediate attention.
+                </div>
+                <div class="timeline-tasks" id="overdueTasks"></div>
+            </div>
+
+            <!-- Due Today Tasks -->
+            <div class="tab-pane fade" id="today" role="tabpanel">
+                <div class="alert alert-warning">
+                    <i class="fas fa-clock me-2"></i>
+                    These tasks are due today.
+                </div>
+                <div class="timeline-tasks" id="todayTasks"></div>
+            </div>
+
+            <!-- This Week Tasks -->
+            <div class="tab-pane fade" id="this-week" role="tabpanel">
+                <div class="timeline-tasks" id="thisWeekTasks"></div>
+            </div>
+
+            <!-- Next Week Tasks -->
+            <div class="tab-pane fade" id="next-week" role="tabpanel">
+                <div class="timeline-tasks" id="nextWeekTasks"></div>
+            </div>
+
+            <!-- Later Tasks -->
+            <div class="tab-pane fade" id="later" role="tabpanel">
+                <div class="timeline-tasks" id="laterTasks"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- User Task Details Section -->
+<div id="userTaskDetails" class="card shadow-sm mb-4" style="display: none;">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <span id="selectedUserName"></span>'s Tasks
+                <small class="text-muted" id="taskCount"></small>
+            </h5>
+            <!-- View Toggle Buttons -->
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary active" 
+                        onclick="switchView('status')" id="statusViewBtn">
+                    <i class="fas fa-list-ul me-2"></i>Status View
+                </button>
+                <button type="button" class="btn btn-outline-primary" 
+                        onclick="switchView('timeline')" id="timelineViewBtn">
+                    <i class="fas fa-calendar-alt me-2"></i>Timeline View
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Status-based View -->
+        <div id="statusView">
+            <ul class="nav nav-tabs mb-3" id="taskTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="pending-tab" data-bs-toggle="tab" href="#pending" role="tab">
+                        Pending Tasks <span class="badge bg-warning ms-2" id="pendingCount">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="inprogress-tab" data-bs-toggle="tab" href="#inprogress" role="tab">
+                        In Progress <span class="badge bg-info ms-2" id="inProgressCount">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="completed-tab" data-bs-toggle="tab" href="#completed" role="tab">
+                        Completed Tasks <span class="badge bg-success ms-2" id="completedCount">0</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" id="taskTabContent">
+                <!-- Your existing tab panes here -->
+                <!-- Pending Tasks -->
+                <div class="tab-pane fade show active" id="pending" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="pendingTasksTable">
+                            <!-- Your existing table structure -->
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- In Progress Tasks -->
+                <div class="tab-pane fade" id="inprogress" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="inProgressTasksTable">
+                            <!-- Your existing table structure -->
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Completed Tasks -->
+                <div class="tab-pane fade" id="completed" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="completedTasksTable">
+                            <!-- Your existing table structure -->
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline View (New) -->
+        <div id="timelineView" style="display: none;">
+            <!-- Your new timeline view content -->
+            <ul class="nav nav-pills mb-3" id="timelineTabs" role="tablist">
+                <!-- Your timeline tabs -->
+            </ul>
+            <div class="tab-content" id="timelineTabContent">
+                <!-- Your timeline content -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Task Status Overview Section -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Task Status Overview</h5>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-primary">Total Tasks: {{ total_tasks }}</span>
+                        <span class="badge bg-success">Completion: {{ "%.1f"|format(completion_rate) }}%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Pending Tasks -->
+                    <div class="col-md-4">
+                        <div class="card border-warning h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-clock text-warning me-2"></i>Pending Tasks
+                                    </h6>
+                                    <span class="badge bg-warning">{{ task_stats.pending.count }}</span>
+                                </div>
+                                <div class="task-list" style="max-height: 300px; overflow-y: auto;">
+                                    {% for task in task_stats.pending.tasks %}
+                                    <div class="task-item p-2 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ task.name }}</h6>
+                                                <p class="mb-1 small text-muted">
+                                                    <i class="fas fa-folder-open me-1"></i>{{ task.scope_area }}
+                                                </p>
+                                                {% if task.due_date %}
+                                                <small class="text-danger">
+                                                    <i class="fas fa-calendar-alt me-1"></i>Due: {{ task.due_date }}
+                                                </small>
+                                                {% endif %}
+                                            </div>
+                                            <span class="badge bg-secondary">{{ task.allocated_to }}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- In Progress Tasks -->
+                    <div class="col-md-4">
+                        <div class="card border-info h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-spinner text-info me-2"></i>In Progress
+                                    </h6>
+                                    <span class="badge bg-info">{{ task_stats.in_progress.count }}</span>
+                                </div>
+                                <div class="task-list" style="max-height: 300px; overflow-y: auto;">
+                                    {% for task in task_stats.in_progress.tasks %}
+                                    <div class="task-item p-2 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ task.name }}</h6>
+                                                <p class="mb-1 small text-muted">
+                                                    <i class="fas fa-folder-open me-1"></i>{{ task.scope_area }}
+                                                </p>
+                                                {% if task.due_date %}
+                                                <small class="text-warning">
+                                                    <i class="fas fa-calendar-alt me-1"></i>Due: {{ task.due_date }}
+                                                </small>
+                                                {% endif %}
+                                            </div>
+                                            <span class="badge bg-secondary">{{ task.allocated_to }}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completed Tasks -->
+                    <div class="col-md-4">
+                        <div class="card border-success h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="card-title mb-0">
+                                        <i class="fas fa-check-circle text-success me-2"></i>Completed Tasks
+                                    </h6>
+                                    <span class="badge bg-success">{{ task_stats.completed.count }}</span>
+                                </div>
+                                <div class="task-list" style="max-height: 300px; overflow-y: auto;">
+                                    {% for task in task_stats.completed.tasks %}
+                                    <div class="task-item p-2 border-bottom">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ task.name }}</h6>
+                                                <p class="mb-1 small text-muted">
+                                                    <i class="fas fa-folder-open me-1"></i>{{ task.scope_area }}
+                                                </p>
+                                                <small class="text-success">
+                                                    <i class="fas fa-check me-1"></i>Completed: {{ task.updated_at.strftime('%Y-%m-%d') }}
+                                                </small>
+                                            </div>
+                                            <span class="badge bg-secondary">{{ task.allocated_to }}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this to your existing style section -->
+<style>
+.task-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,.2) transparent;
+}
+
+.task-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.task-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.task-list::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,.2);
+    border-radius: 3px;
+}
+
+.task-item {
+    transition: all 0.3s ease;
+}
+
+.task-item:hover {
+    background-color: rgba(0,0,0,.03);
+}
+
+.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.border-info {
+    border-left: 4px solid #17a2b8 !important;
+}
+
+.border-success {
+    border-left: 4px solid #28a745 !important;
+}
+</style>
     <!-- Recent Activities -->
     <div class="card">
         <div class="card-header">
@@ -224,6 +568,29 @@
             </div>
         </div>
     </div>
+    <!-- Task Details Modal -->
+<div class="modal fade" id="viewTaskModal" tabindex="-1" aria-labelledby="viewTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewTaskModalLabel">Task Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="taskDetailsContent">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+            <!-- Update the modal footer in your viewTaskModal -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="markTaskComplete()" id="completeTaskBtn">
+                    <i class="fas fa-check me-2"></i>Mark as Complete
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
 <script>
@@ -330,9 +697,376 @@ function clearFilters() {
     document.getElementById('userTaskDetails').style.display = 'none';
 }
 
+let currentTaskId = null;
+
 function viewTaskDetails(taskId) {
-    // Implement task details view
-    console.log(`Viewing task ${taskId}`);
+    currentTaskId = taskId;
+    const modal = new bootstrap.Modal(document.getElementById('viewTaskModal'));
+    const contentDiv = document.getElementById('taskDetailsContent');
+    const completeButton = document.getElementById('completeTaskBtn');
+    
+    // Show loading spinner
+    contentDiv.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+
+    // Fetch task details
+    fetch(`/api/task/${taskId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            // Update complete button visibility based on task status
+            if (data.status.toLowerCase() === 'completed') {
+                completeButton.style.display = 'none';
+            } else {
+                completeButton.style.display = 'block';
+            }
+
+            // Format dates
+            const dueDate = data.due_date ? new Date(data.due_date).toLocaleDateString() : 'Not set';
+            const updatedDate = data.updated_at ? new Date(data.updated_at).toLocaleDateString() : 'Not available';
+            const createdDate = data.created_at ? new Date(data.created_at).toLocaleDateString() : 'Not available';
+
+            contentDiv.innerHTML = `
+                <div class="task-details p-2">
+                    <!-- Task Header -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">${data.task_name}</h5>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-${getStatusBadgeColor(data.status)} px-3 py-2">${data.status}</span>
+                                <span class="text-muted"><i class="fas fa-folder me-1"></i>${data.scope_area}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm mb-0">
+                                        <tr>
+                                            <th width="35%">Assigned To:</th>
+                                            <td>
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-user me-1"></i>${data.allocated_team_member || 'Unassigned'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Created Date:</th>
+                                            <td>${createdDate}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last Updated:</th>
+                                            <td>${updatedDate}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Due Date:</th>
+                                            <td class="${isOverdue(data.due_date) ? 'text-danger fw-bold' : ''}">
+                                                <i class="fas fa-calendar-alt me-1"></i>${dueDate}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Audit Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="procedure-section mb-3">
+                                        <h6 class="text-muted mb-2">Audit Procedure</h6>
+                                        <p class="mb-0">${data.procedure || 'No procedure specified'}</p>
+                                    </div>
+                                    <hr>
+                                    <div class="evidence-section">
+                                        <h6 class="text-muted mb-2">Audit Evidence</h6>
+                                        <p class="mb-0">${data.audit_evidence || 'No evidence recorded'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0"><i class="fas fa-comments me-2"></i>Comments</h6>
+                                </div>
+                                <div class="card-body">
+                                    ${data.comments ? 
+                                        `<p class="mb-0">${data.comments}</p>` : 
+                                        '<p class="text-muted mb-0">No comments available</p>'
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Supporting Documents -->
+                    ${data.supporting_docs && data.supporting_docs.length > 0 ? `
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-file-alt me-2"></i>Supporting Documents
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="list-group">
+                                            ${data.supporting_docs.map(doc => `
+                                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <i class="fas ${getFileIcon(doc.mime_type)} me-2"></i>
+                                                        ${doc.filename}
+                                                        <small class="text-muted ms-2">${formatFileSize(doc.size || 0)}</small>
+                                                    </div>
+                                                    <div class="btn-group">
+                                                        <button class="btn btn-sm btn-outline-primary" 
+                                                                onclick="downloadDocument('${doc._id}')">
+                                                            <i class="fas fa-download me-1"></i>Download
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        })
+        .catch(error => {
+            console.error('Error fetching task details:', error);
+            contentDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Error loading task details. Please try again.
+                </div>
+            `;
+        });
+}
+
+// Helper functions
+function getStatusBadgeColor(status) {
+    switch(status.toLowerCase()) {
+        case 'completed': return 'success';
+        case 'in progress': return 'warning';
+        default: return 'secondary';
+    }
+}
+
+function isOverdue(dueDate) {
+    if (!dueDate) return false;
+    return new Date(dueDate) < new Date();
+}
+
+function getFileIcon(mimeType) {
+    if (!mimeType) return 'fa-file';
+    if (mimeType.includes('pdf')) return 'fa-file-pdf';
+    if (mimeType.includes('word')) return 'fa-file-word';
+    if (mimeType.includes('excel')) return 'fa-file-excel';
+    if (mimeType.includes('image')) return 'fa-file-image';
+    return 'fa-file';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function downloadDocument(docId) {
+    window.location.href = `/client/${getClientId()}/task-document/${docId}/download`;
+}
+
+function getClientId() {
+    // Extract client ID from URL
+    const pathParts = window.location.pathname.split('/');
+    const clientIndex = pathParts.indexOf('client') + 1;
+    return pathParts[clientIndex];
+}
+// Add this to your existing JavaScript
+function loadTaskTimeline() {
+    const clientId = '{{ client_id }}';
+    const startDate = '{{ start_date }}';
+    const endDate = '{{ end_date }}';
+    const selectedUser = document.getElementById('userFilter').value;
+
+    if (!selectedUser) return;
+
+    const timelineSection = document.getElementById('taskTimelineSection');
+    timelineSection.style.display = 'block';
+
+    fetch(`/api/client/${clientId}/user_task_timeline?start_date=${startDate}&end_date=${endDate}&user=${selectedUser}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateTimelineCounts(data.counts);
+                updateTimelineTasks(data.task_timeline);
+            }
+        })
+        .catch(error => console.error('Error loading task timeline:', error));
+}
+
+function updateTimelineCounts(counts) {
+    document.getElementById('overdueCount').textContent = counts.overdue;
+    document.getElementById('todayCount').textContent = counts.due_today;
+    document.getElementById('thisWeekCount').textContent = counts.this_week;
+    document.getElementById('nextWeekCount').textContent = counts.next_week;
+    document.getElementById('laterCount').textContent = counts.later;
+}
+
+function updateTimelineTasks(timeline) {
+    const categories = {
+        'overdueTasks': timeline.overdue,
+        'todayTasks': timeline.due_today,
+        'thisWeekTasks': timeline.this_week,
+        'nextWeekTasks': timeline.next_week,
+        'laterTasks': timeline.later
+    };
+
+    for (const [containerId, tasks] of Object.entries(categories)) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        if (tasks.length === 0) {
+            container.innerHTML = '<div class="text-muted text-center py-3">No tasks in this category</div>';
+            continue;
+        }
+
+        const taskList = document.createElement('div');
+        taskList.className = 'list-group';
+
+        tasks.forEach(task => {
+            const taskElement = document.createElement('div');
+            taskElement.className = 'list-group-item list-group-item-action';
+            taskElement.innerHTML = `
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${task.task_name}</h6>
+                        <p class="mb-1 text-muted">
+                            <small>
+                                <i class="fas fa-folder me-1"></i>${task.scope_area}
+                                ${task.days_until_due < 0 
+                                    ? `<span class="text-danger">Overdue by ${Math.abs(task.days_until_due)} days</span>`
+                                    : `<span class="text-muted">Due in ${task.days_until_due} days</span>`
+                                }
+                            </small>
+                        </p>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="viewTaskDetails('${task._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" 
+                                onclick="markTaskComplete('${task._id}')">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            taskList.appendChild(taskElement);
+        });
+
+        container.appendChild(taskList);
+    }
+}
+
+// Update the existing filterByUser function
+function filterByUser() {
+    // ... existing code ...
+    loadTaskTimeline(); // Add this line to load the timeline
+}
+// Add this function to your JavaScript
+function markTaskComplete() {
+    if (!currentTaskId) return;
+
+    const completeButton = document.getElementById('completeTaskBtn');
+    completeButton.disabled = true;
+    completeButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+
+    const clientId = getClientId();
+
+    fetch(`/api/task/${currentTaskId}/complete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            completion_date: new Date().toISOString()
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('viewTaskModal'));
+            modal.hide();
+
+            // Show success message
+            showAlert('Success!', 'Task marked as completed', 'success');
+
+            // Refresh the task lists and counters
+            loadUserTasks();
+            
+            // If timeline is visible, refresh it
+            if (document.getElementById('taskTimelineSection').style.display !== 'none') {
+                loadTaskTimeline();
+            }
+
+            // Refresh filter results if any filters are active
+            if (document.getElementById('userFilter').value) {
+                filterByUser();
+            }
+        } else {
+            throw new Error(data.error || 'Failed to complete task');
+        }
+    })
+    .catch(error => {
+        console.error('Error completing task:', error);
+        showAlert('Error', 'Failed to complete task. Please try again.', 'error');
+        completeButton.disabled = false;
+        completeButton.innerHTML = '<i class="fas fa-check me-2"></i>Mark as Complete';
+    });
+}
+
+// Add a helper function for showing alerts
+function showAlert(title, message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        <strong>${title}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Remove the alert after 3 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
 }
 </script>
 {% endblock %}
